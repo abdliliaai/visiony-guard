@@ -11,6 +11,7 @@ import { SecurityChatbot } from "@/components/chat/SecurityChatbot";
 import Index from "./pages/Index";
 import MSSSPDashboard from "./pages/MSSSPDashboard";
 import CameraManagement from "./components/camera/CameraManagement";
+import UserManagement from "./components/user/UserManagement";
 import Analytics from "./pages/Analytics";
 import LiveView from "./pages/LiveView";
 import Settings from "./pages/Settings";
@@ -65,6 +66,22 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <CameraManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/devices"
+          element={
+            <ProtectedRoute>
+              <CameraManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute>
+              <UserManagement />
             </ProtectedRoute>
           }
         />
