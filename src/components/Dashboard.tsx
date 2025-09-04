@@ -16,7 +16,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import heroImage from '@/assets/security-camera-hero.jpg';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useEvents } from '@/hooks/useEvents';
 import { useDevices } from '@/hooks/useDevices';
 import { MobileFeatures } from '@/components/mobile/MobileFeatures';

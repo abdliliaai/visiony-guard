@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthPage } from "@/components/auth/AuthPage";
 import { MobileNav } from "@/components/mobile/MobileNav";
 import { SecurityChatbot } from "@/components/chat/SecurityChatbot";
@@ -149,7 +149,9 @@ const App = () => (
           v7_relativeSplatPath: true,
         }}
       >
-        <AppRoutes />
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
