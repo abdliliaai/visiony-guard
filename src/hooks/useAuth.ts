@@ -13,46 +13,57 @@ export const useAuthHook = () => {
 
   useEffect(() => {
     let isMounted = true;
-    let profileLoading = false;
+    let fetchingProfile = false;
+
+    const fetchProfile = async (userId: string) => {
+      if (fetchingProfile) return;
+      fetchingProfile = true;
+      
+      try {
+        const { data: profileData, error } = await supabase
+          .from('vy_user_profile')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+        
+        if (isMounted) {
+          if (error && error.code !== 'PGRST116') {
+            console.error('Error fetching user profile:', error);
+          }
+          setProfile(profileData as UserProfile);
+        }
+      } catch (err) {
+        console.error('Profile fetch error:', err);
+        if (isMounted) setProfile(null);
+      } finally {
+        fetchingProfile = false;
+      }
+    };
 
     // Set up auth state listener  
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (!isMounted) return;
         
         console.log('Auth state changed:', event, session?.user?.email);
+        
+        // Handle session refresh failures
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          console.log('Token refresh failed, signing out');
+          await supabase.auth.signOut();
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Use setTimeout to prevent infinite loops and fetch profile
-        if (session?.user && !profileLoading) {
-          profileLoading = true;
-          setTimeout(async () => {
-            if (!isMounted) return;
-            
-            try {
-              const { data: profileData, error } = await supabase
-                .from('vy_user_profile')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .maybeSingle();
-              
-              if (isMounted) {
-                if (error && error.code !== 'PGRST116') { // Not found is OK
-                  console.error('Error fetching user profile:', error);
-                }
-                setProfile(profileData as UserProfile);
-              }
-            } catch (err) {
-              console.error('Profile fetch error:', err);
-              if (isMounted) setProfile(null);
-            } finally {
-              profileLoading = false;
-            }
-          }, 0);
+        // Fetch profile when user signs in
+        if (session?.user && event === 'SIGNED_IN') {
+          setTimeout(() => {
+            if (isMounted) fetchProfile(session.user.id);
+          }, 100);
         } else if (!session?.user) {
           setProfile(null);
-          profileLoading = false;
         }
         
         setLoading(false);
@@ -60,12 +71,21 @@ export const useAuthHook = () => {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (!isMounted) return;
+      
+      if (error) {
+        console.error('Session error:', error);
+        setLoading(false);
+        return;
+      }
       
       setSession(session);
       setUser(session?.user ?? null);
-      if (!session) {
+      
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
         setLoading(false);
       }
     });
