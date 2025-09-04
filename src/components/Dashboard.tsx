@@ -20,6 +20,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useEvents } from '@/hooks/useEvents';
 import { useDevices } from '@/hooks/useDevices';
 import { MobileFeatures } from '@/components/mobile/MobileFeatures';
+import { Link } from 'react-router-dom';
 
 const getSeverityColor = (severity: string) => {
   switch (severity) {
@@ -61,8 +62,8 @@ export const Dashboard: React.FC = () => {
               <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
                 ✨ AI-Powered Detection Active
               </Badge>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                Welcome back, {profile?.first_name || 'User'}!
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                Welcome back, {profile?.first_name && profile?.last_name ? `${profile.first_name} ${profile.last_name}` : profile?.first_name || 'User'}!
                 <span className="block bg-gradient-primary bg-clip-text text-transparent">
                   Security Intelligence
                 </span>
@@ -74,13 +75,17 @@ export const Dashboard: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-4">
-              <Button size="lg" className="bg-gradient-primary hover:bg-gradient-primary/90 text-white shadow-glow">
-                <Play className="w-5 h-5 mr-2" />
-                View Live Feed
+              <Button size="lg" className="bg-gradient-primary hover:bg-gradient-primary/90 text-white shadow-glow" asChild>
+                <Link to="/live">
+                  <Play className="w-5 h-5 mr-2" />
+                  View Live Feed
+                </Link>
               </Button>
-              <Button variant="outline" size="lg">
-                <BarChart3 className="w-5 h-5 mr-2" />
-                Analytics Dashboard
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/analytics">
+                  <BarChart3 className="w-5 h-5 mr-2" />
+                  Analytics Dashboard
+                </Link>
               </Button>
             </div>
 

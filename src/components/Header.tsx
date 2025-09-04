@@ -14,6 +14,7 @@ import { Shield, User, Settings, LogOut, Building2, Plus, Camera } from 'lucide-
 import { useAuth } from '@/hooks/useAuth';
 import { CameraWizard } from '@/components/camera/CameraWizard';
 import { TenantSwitcher } from '@/components/tenant/TenantSwitcher';
+import { Link } from 'react-router-dom';
 
 export const Header = () => {
   const { user, profile, signOut, isAdmin } = useAuth();
@@ -127,13 +128,17 @@ export const Header = () => {
                   </>
                 )}
                 
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
