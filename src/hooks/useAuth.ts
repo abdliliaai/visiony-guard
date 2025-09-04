@@ -12,54 +12,57 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-    
-    // Set up auth state listener
+    let isMounted = true;
+    let profileLoading = false;
+
+    // Set up auth state listener  
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (!mounted) return;
+        if (!isMounted) return;
         
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Defer profile fetching to avoid loops
-        if (session?.user) {
+        // Use setTimeout to prevent infinite loops and fetch profile
+        if (session?.user && !profileLoading) {
+          profileLoading = true;
           setTimeout(async () => {
-            if (!mounted) return;
+            if (!isMounted) return;
             
             try {
               const { data: profileData, error } = await supabase
                 .from('vy_user_profile')
                 .select('*')
                 .eq('user_id', session.user.id)
-                .single();
+                .maybeSingle();
               
-              if (!mounted) return;
-              
-              if (error) {
-                console.error('Error fetching user profile:', error);
-                setProfile(null);
-              } else {
+              if (isMounted) {
+                if (error && error.code !== 'PGRST116') { // Not found is OK
+                  console.error('Error fetching user profile:', error);
+                }
                 setProfile(profileData as UserProfile);
               }
             } catch (err) {
               console.error('Profile fetch error:', err);
-              if (mounted) setProfile(null);
+              if (isMounted) setProfile(null);
+            } finally {
+              profileLoading = false;
             }
-            
-            if (mounted) setLoading(false);
           }, 0);
-        } else {
+        } else if (!session?.user) {
           setProfile(null);
-          setLoading(false);
+          profileLoading = false;
         }
+        
+        setLoading(false);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
+      if (!isMounted) return;
+      
       setSession(session);
       setUser(session?.user ?? null);
       if (!session) {
@@ -68,7 +71,7 @@ export const useAuth = () => {
     });
 
     return () => {
-      mounted = false;
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
