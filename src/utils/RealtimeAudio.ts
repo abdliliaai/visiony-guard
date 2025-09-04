@@ -8,7 +8,6 @@ export class AudioRecorder {
 
   async start() {
     try {
-      console.log('Starting audio recorder...');
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 24000,
@@ -23,8 +22,6 @@ export class AudioRecorder {
         sampleRate: 24000,
       });
       
-      console.log('Audio context created with sample rate:', this.audioContext.sampleRate);
-      
       this.source = this.audioContext.createMediaStreamSource(this.stream);
       this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
       
@@ -35,8 +32,6 @@ export class AudioRecorder {
       
       this.source.connect(this.processor);
       this.processor.connect(this.audioContext.destination);
-      
-      console.log('Audio recorder started successfully');
     } catch (error) {
       console.error('Error accessing microphone:', error);
       throw error;
@@ -44,7 +39,6 @@ export class AudioRecorder {
   }
 
   stop() {
-    console.log('Stopping audio recorder...');
     if (this.source) {
       this.source.disconnect();
       this.source = null;
@@ -61,10 +55,10 @@ export class AudioRecorder {
       this.audioContext.close();
       this.audioContext = null;
     }
-    console.log('Audio recorder stopped');
   }
 }
 
+// Audio encoding utility
 export const encodeAudioForAPI = (float32Array: Float32Array): string => {
   const int16Array = new Int16Array(float32Array.length);
   for (let i = 0; i < float32Array.length; i++) {
@@ -84,10 +78,8 @@ export const encodeAudioForAPI = (float32Array: Float32Array): string => {
   return btoa(binary);
 };
 
-// Create WAV from PCM data
-export const createWavFromPCM = (pcmData: Uint8Array): Uint8Array => {
-  console.log('Creating WAV from PCM data, size:', pcmData.length);
-  
+// WAV utilities for audio playback
+const createWavFromPCM = (pcmData: Uint8Array) => {
   // Convert bytes to 16-bit samples (little endian)
   const int16Data = new Int16Array(pcmData.length / 2);
   for (let i = 0; i < pcmData.length; i += 2) {
@@ -116,8 +108,8 @@ export const createWavFromPCM = (pcmData: Uint8Array): Uint8Array => {
   view.setUint32(4, 36 + int16Data.byteLength, true);
   writeString(view, 8, 'WAVE');
   writeString(view, 12, 'fmt ');
-  view.setUint32(16, 16, true); // PCM format chunk size
-  view.setUint16(20, 1, true); // PCM format
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
   view.setUint16(22, numChannels, true);
   view.setUint32(24, sampleRate, true);
   view.setUint32(28, byteRate, true);
@@ -131,23 +123,20 @@ export const createWavFromPCM = (pcmData: Uint8Array): Uint8Array => {
   wavArray.set(new Uint8Array(wavHeader), 0);
   wavArray.set(new Uint8Array(int16Data.buffer), wavHeader.byteLength);
   
-  console.log('WAV created, total size:', wavArray.length);
   return wavArray;
 };
 
-// Audio Queue class for sequential playback
-export class AudioQueue {
+// Audio queue for sequential playback
+class AudioQueue {
   private queue: Uint8Array[] = [];
   private isPlaying = false;
   private audioContext: AudioContext;
 
   constructor(audioContext: AudioContext) {
     this.audioContext = audioContext;
-    console.log('AudioQueue created with context sample rate:', audioContext.sampleRate);
   }
 
   async addToQueue(audioData: Uint8Array) {
-    console.log('Adding audio chunk to queue, size:', audioData.length);
     this.queue.push(audioData);
     if (!this.isPlaying) {
       await this.playNext();
@@ -156,63 +145,47 @@ export class AudioQueue {
 
   private async playNext() {
     if (this.queue.length === 0) {
-      console.log('Queue empty, stopping playback');
       this.isPlaying = false;
       return;
     }
 
     this.isPlaying = true;
     const audioData = this.queue.shift()!;
-    console.log('Playing next audio chunk, size:', audioData.length);
 
     try {
       const wavData = createWavFromPCM(audioData);
-      const audioBuffer = await this.audioContext.decodeAudioData(wavData.buffer.slice(0));
+      const audioBuffer = await this.audioContext.decodeAudioData(wavData.buffer);
       
       const source = this.audioContext.createBufferSource();
       source.buffer = audioBuffer;
       source.connect(this.audioContext.destination);
       
-      source.onended = () => {
-        console.log('Audio chunk finished playing');
-        this.playNext();
-      };
-      
+      source.onended = () => this.playNext();
       source.start(0);
-      console.log('Audio chunk started playing');
     } catch (error) {
-      console.error('Error playing audio chunk:', error);
+      console.error('Error playing audio:', error);
       this.playNext(); // Continue with next segment even if current fails
     }
   }
 
   clear() {
-    console.log('Clearing audio queue');
     this.queue = [];
     this.isPlaying = false;
   }
 }
 
-// Singleton audio queue instance
-let audioQueueInstance: AudioQueue | null = null;
-
-export const playAudioData = async (audioContext: AudioContext, audioData: Uint8Array) => {
-  if (!audioQueueInstance) {
-    audioQueueInstance = new AudioQueue(audioContext);
-  }
-  await audioQueueInstance.addToQueue(audioData);
-};
-
-// RealtimeChat class
 export class RealtimeChat {
   private ws: WebSocket | null = null;
+  private audioRecorder: AudioRecorder | null = null;
   private audioContext: AudioContext | null = null;
-  private recorder: AudioRecorder | null = null;
   private audioQueue: AudioQueue | null = null;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectDelay = 1000;
 
   constructor(
-    private onMessage: (message: any) => void,
-    private onConnectionChange: (connected: boolean) => void
+    private onMessage: (data: any) => void,
+    private onConnectionChange?: (connected: boolean) => void
   ) {}
 
   async connect() {
@@ -220,94 +193,109 @@ export class RealtimeChat {
       console.log('Connecting to realtime chat...');
       
       // Initialize audio context
-      this.audioContext = new AudioContext({ sampleRate: 24000 });
-      this.audioQueue = new AudioQueue(this.audioContext);
-      
-      // Connect to WebSocket (using the correct Supabase function URL)
-      const wsUrl = 'wss://mwhutmxhymjwimxeavbc.functions.supabase.co/functions/v1/realtime-chat';
-      console.log('Connecting to WebSocket:', wsUrl);
+      if (!this.audioContext) {
+        this.audioContext = new AudioContext({ sampleRate: 24000 });
+        this.audioQueue = new AudioQueue(this.audioContext);
+      }
+
+      // Connect to WebSocket
+      const wsUrl = `wss://mwhutmxhymjwimxeavbc.functions.supabase.co/realtime-chat`;
+      console.log('Connecting to:', wsUrl);
       
       this.ws = new WebSocket(wsUrl);
-      
+
       this.ws.onopen = () => {
         console.log('WebSocket connected');
-        this.onConnectionChange(true);
-        this.startAudioRecording();
+        this.reconnectAttempts = 0;
+        this.onConnectionChange?.(true);
       };
 
       this.ws.onmessage = async (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('Received message type:', data.type);
+          console.log('Received message:', data.type);
           
-          if (data.type === 'response.audio.delta') {
-            // Handle audio response
-            console.log('Received audio delta, size:', data.delta?.length);
-            if (data.delta && this.audioContext) {
-              const binaryString = atob(data.delta);
-              const bytes = new Uint8Array(binaryString.length);
-              for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-              }
-              await playAudioData(this.audioContext, bytes);
-            }
-          } else if (data.type === 'response.audio_transcript.delta') {
-            // Handle text transcript
-            console.log('Received transcript delta:', data.delta);
+          // Handle audio data
+          if (data.type === 'response.audio.delta' && data.delta) {
+            await this.playAudioDelta(data.delta);
           }
           
-          // Forward all messages to the handler
+          // Forward all messages to handler
           this.onMessage(data);
         } catch (error) {
           console.error('Error processing message:', error);
         }
       };
 
-      this.ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        this.onConnectionChange(false);
+      this.ws.onclose = (event) => {
+        console.log('WebSocket closed:', event.code, event.reason);
+        this.onConnectionChange?.(false);
+        
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+          this.reconnectAttempts++;
+          console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+          setTimeout(() => this.connect(), this.reconnectDelay * this.reconnectAttempts);
+        }
       };
 
-      this.ws.onclose = () => {
-        console.log('WebSocket disconnected');
-        this.onConnectionChange(false);
+      this.ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        this.onConnectionChange?.(false);
       };
+
+      // Start audio recording
+      await this.startAudioRecording();
       
     } catch (error) {
-      console.error('Error connecting to realtime chat:', error);
+      console.error('Error connecting to chat:', error);
+      this.onConnectionChange?.(false);
       throw error;
     }
   }
 
   private async startAudioRecording() {
     try {
-      console.log('Starting audio recording for realtime chat...');
-      this.recorder = new AudioRecorder((audioData) => {
-        if (this.ws?.readyState === WebSocket.OPEN) {
-          const encodedAudio = encodeAudioForAPI(audioData);
+      this.audioRecorder = new AudioRecorder((audioData) => {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
           const message = {
             type: 'input_audio_buffer.append',
-            audio: encodedAudio
+            audio: encodeAudioForAPI(audioData)
           };
           this.ws.send(JSON.stringify(message));
         }
       });
       
-      await this.recorder.start();
-      console.log('Audio recording started for realtime chat');
+      await this.audioRecorder.start();
+      console.log('Audio recording started');
     } catch (error) {
       console.error('Error starting audio recording:', error);
+      // Don't throw error - allow text-only mode
+    }
+  }
+
+  private async playAudioDelta(deltaBase64: string) {
+    try {
+      if (!this.audioQueue) return;
+      
+      // Convert base64 to Uint8Array
+      const binaryString = atob(deltaBase64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      await this.audioQueue.addToQueue(bytes);
+    } catch (error) {
+      console.error('Error playing audio delta:', error);
     }
   }
 
   async sendMessage(text: string) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      throw new Error('Not connected to chat service');
+      throw new Error('WebSocket not connected');
     }
 
-    console.log('Sending text message:', text);
-
-    const event = {
+    const message = {
       type: 'conversation.item.create',
       item: {
         type: 'message',
@@ -321,25 +309,33 @@ export class RealtimeChat {
       }
     };
 
-    this.ws.send(JSON.stringify(event));
+    this.ws.send(JSON.stringify(message));
     this.ws.send(JSON.stringify({ type: 'response.create' }));
   }
 
   disconnect() {
     console.log('Disconnecting realtime chat...');
     
-    this.recorder?.stop();
-    this.audioQueue?.clear();
+    if (this.audioRecorder) {
+      this.audioRecorder.stop();
+      this.audioRecorder = null;
+    }
+    
+    if (this.audioQueue) {
+      this.audioQueue.clear();
+    }
     
     if (this.audioContext) {
       this.audioContext.close();
+      this.audioContext = null;
     }
     
     if (this.ws) {
       this.ws.close();
+      this.ws = null;
     }
     
-    this.onConnectionChange(false);
+    this.onConnectionChange?.(false);
     console.log('Realtime chat disconnected');
   }
 }
