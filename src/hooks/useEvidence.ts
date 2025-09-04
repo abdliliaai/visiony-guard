@@ -14,9 +14,9 @@ interface Evidence {
   mime_type?: string;
   description?: string;
   collected_by: string;
-  chain_of_custody: any[];
+  chain_of_custody: any;
   hash_value?: string;
-  metadata: Record<string, any>;
+  metadata: any;
   tenant_id: string;
   created_at: string;
   updated_at: string;
@@ -53,7 +53,7 @@ export function useEvidence() {
       const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
-      setEvidence(data || []);
+      setEvidence((data || []) as Evidence[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch evidence');
       toast.error('Failed to load evidence');
@@ -135,7 +135,7 @@ export function useEvidence() {
         notes: 'Evidence initially collected and uploaded',
       });
 
-      setEvidence(prev => [data, ...prev]);
+      setEvidence(prev => [data as Evidence, ...prev]);
       toast.success('Evidence uploaded successfully');
       return data;
     } catch (err) {

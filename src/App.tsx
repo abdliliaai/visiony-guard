@@ -5,11 +5,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthPage } from "@/components/auth/AuthPage";
+import { MobileNav } from "@/components/mobile/MobileNav";
 import Index from "./pages/Index";
 import Analytics from "./pages/Analytics";
 import LiveView from "./pages/LiveView";
 import Settings from "./pages/Settings";
 import CaseDetails from "./pages/CaseDetails";
+import Cases from "./pages/Cases";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,54 +42,67 @@ const AppRoutes = () => {
   }
 
   return (
-    <Routes>
-      <Route 
-        path="/auth" 
-        element={isAuthenticated ? <Navigate to="/" replace /> : <AuthPage />} 
-      />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Index />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/analytics"
-        element={
-          <ProtectedRoute>
-            <Analytics />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/live"
-        element={
-          <ProtectedRoute>
-            <LiveView />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/case/:type/:caseId"
-        element={
-          <ProtectedRoute>
-            <CaseDetails />
-          </ProtectedRoute>
-        }
-      />
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <div className="relative">
+      <Routes>
+        <Route 
+          path="/auth" 
+          element={isAuthenticated ? <Navigate to="/" replace /> : <AuthPage />} 
+        />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Index />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <Analytics />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/live"
+          element={
+            <ProtectedRoute>
+              <LiveView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cases"
+          element={
+            <ProtectedRoute>
+              <Cases />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/case/:id"
+          element={
+            <ProtectedRoute>
+              <CaseDetails />
+            </ProtectedRoute>
+          }
+        />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      
+      {/* Mobile Navigation */}
+      {isAuthenticated && <MobileNav />}
+    </div>
   );
 };
 
