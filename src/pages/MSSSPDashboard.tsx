@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
 import { ClientOnboardingWizard } from '@/components/tenant/ClientOnboardingWizard';
 import { TenantSwitcher } from '@/components/tenant/TenantSwitcher';
+import { useNavigate } from 'react-router-dom';
 import { 
   Building2, 
   Users, 
@@ -40,6 +41,7 @@ interface ClientTenant {
 const MSSSPDashboard = () => {
   const { profile, isRootAdmin } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [clients, setClients] = useState<ClientTenant[]>([]);
   const [showOnboardingWizard, setShowOnboardingWizard] = useState(false);
@@ -189,8 +191,8 @@ const MSSSPDashboard = () => {
 
   const handleViewDashboard = (tenantId: string) => {
     setSelectedTenant(tenantId);
-    // Navigate to dashboard with tenant context
-    window.location.href = `/?tenant=${tenantId}`;
+    // Navigate to dashboard with tenant context using React Router
+    navigate(`/?tenant=${tenantId}`);
   };
 
   const handleManageUsers = (tenantId: string) => {
@@ -201,8 +203,8 @@ const MSSSPDashboard = () => {
   };
 
   const handleManageCameras = (tenantId: string) => {
-    // Navigate to camera management for this tenant
-    window.location.href = `/cameras?tenant=${tenantId}`;
+    // Navigate to camera management for this tenant using React Router
+    navigate(`/cameras?tenant=${tenantId}`);
   };
 
   const handleSettings = (tenantId: string) => {
@@ -243,7 +245,7 @@ const MSSSPDashboard = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.history.back()}
+              onClick={() => navigate(-1)}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />

@@ -19,8 +19,6 @@ export const useAuthHook = () => {
       if (fetchingProfile) return;
       fetchingProfile = true;
       
-      console.log('Fetching profile for user:', userId);
-      
       try {
         const { data: profileData, error } = await supabase
           .from('vy_user_profile')
@@ -28,21 +26,17 @@ export const useAuthHook = () => {
           .eq('user_id', userId)
           .maybeSingle();
         
-        console.log('Profile fetch result:', { profileData, error });
-        
         if (isMounted) {
           if (error && error.code !== 'PGRST116') {
             console.error('Error fetching user profile:', error);
           }
           setProfile(profileData as UserProfile);
-          console.log('Setting loading to false after profile fetch');
           setLoading(false);
         }
       } catch (err) {
         console.error('Profile fetch error:', err);
         if (isMounted) {
           setProfile(null);
-          console.log('Setting loading to false after profile fetch error');
           setLoading(false);
         }
       } finally {
@@ -56,7 +50,6 @@ export const useAuthHook = () => {
         if (!isMounted) return;
         
         console.log('Auth state changed:', event, session?.user?.email);
-        console.log('Setting loading to false due to auth state change');
         
         // Handle session refresh failures
         if (event === 'TOKEN_REFRESHED' && !session) {
@@ -70,10 +63,9 @@ export const useAuthHook = () => {
         
         // Fetch profile when user signs in
         if (session?.user && event === 'SIGNED_IN') {
-          // Temporarily disabled for debugging
-          // setTimeout(() => {
-          //   if (isMounted) fetchProfile(session.user.id);
-          // }, 100);
+          setTimeout(() => {
+            if (isMounted) fetchProfile(session.user.id);
+          }, 100);
         } else if (!session?.user) {
           setProfile(null);
         }
@@ -86,11 +78,8 @@ export const useAuthHook = () => {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (!isMounted) return;
       
-      console.log('Initial session check:', { session: !!session, error });
-      
       if (error) {
         console.error('Session error:', error);
-        console.log('Setting loading to false due to session error');
         setLoading(false);
         return;
       }
@@ -99,10 +88,8 @@ export const useAuthHook = () => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        console.log('Found existing session, but skipping profile fetch for debugging');
-        // fetchProfile(session.user.id);
+        fetchProfile(session.user.id);
       } else {
-        console.log('No existing session, setting loading to false');
         setLoading(false);
       }
     });
