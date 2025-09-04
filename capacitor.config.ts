@@ -4,10 +4,6 @@ const config: CapacitorConfig = {
   appId: 'com.visiony.guard',
   appName: 'visiony-guard',
   webDir: 'dist',
-  server: {
-    url: 'https://your-app-domain.com',
-    cleartext: true
-  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
