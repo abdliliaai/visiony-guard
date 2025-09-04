@@ -87,7 +87,7 @@ serve(async (req) => {
 
     // Send invitation email
     try {
-      const inviteUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovable.dev') || 'https://your-app-domain.com'}/auth?invite=${inviteToken}`;
+      const inviteUrl = `${Deno.env.get('FRONTEND_URL') || 'https://your-app-domain.com'}/auth?invite=${inviteToken}`;
       
       const { error: emailError } = await supabase.functions.invoke('send-alert-email', {
         body: {

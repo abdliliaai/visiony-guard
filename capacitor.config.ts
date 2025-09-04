@@ -1,11 +1,11 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.c2acf209a518444997ce479a7790923f',
+  appId: 'com.visiony.guard',
   appName: 'visiony-guard',
   webDir: 'dist',
   server: {
-    url: 'https://c2acf209-a518-4449-97ce-479a7790923f.lovableproject.com?forceHideBadge=true',
+    url: 'https://your-app-domain.com',
     cleartext: true
   },
   plugins: {
