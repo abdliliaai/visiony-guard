@@ -14,6 +14,250 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_analysis: {
+        Row: {
+          analysis_type: string
+          confidence_score: number | null
+          created_at: string
+          event_id: string | null
+          id: string
+          model_version: string | null
+          processing_time_ms: number | null
+          results: Json
+          tenant_id: string
+        }
+        Insert: {
+          analysis_type: string
+          confidence_score?: number | null
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          model_version?: string | null
+          processing_time_ms?: number | null
+          results?: Json
+          tenant_id: string
+        }
+        Update: {
+          analysis_type?: string
+          confidence_score?: number | null
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          model_version?: string | null
+          processing_time_ms?: number | null
+          results?: Json
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_analysis_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "vy_event"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alert_configurations: {
+        Row: {
+          alert_type: string
+          conditions: Json | null
+          created_at: string
+          email_enabled: boolean | null
+          enabled: boolean | null
+          id: string
+          push_enabled: boolean | null
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_type: string
+          conditions?: Json | null
+          created_at?: string
+          email_enabled?: boolean | null
+          enabled?: boolean | null
+          id?: string
+          push_enabled?: boolean | null
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_type?: string
+          conditions?: Json | null
+          created_at?: string
+          email_enabled?: boolean | null
+          enabled?: boolean | null
+          id?: string
+          push_enabled?: boolean | null
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cases: {
+        Row: {
+          assigned_to: string | null
+          case_number: string
+          category: string
+          created_at: string
+          created_by: string
+          description: string | null
+          estimated_completion: string | null
+          id: string
+          incident_date: string | null
+          location: string | null
+          priority: string
+          resolution: string | null
+          status: string
+          tenant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          case_number: string
+          category?: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          estimated_completion?: string | null
+          id?: string
+          incident_date?: string | null
+          location?: string | null
+          priority?: string
+          resolution?: string | null
+          status?: string
+          tenant_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          case_number?: string
+          category?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          estimated_completion?: string | null
+          id?: string
+          incident_date?: string | null
+          location?: string | null
+          priority?: string
+          resolution?: string | null
+          status?: string
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      evidence: {
+        Row: {
+          case_id: string | null
+          chain_of_custody: Json | null
+          collected_by: string
+          created_at: string
+          description: string | null
+          evidence_number: string
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          hash_value: string | null
+          id: string
+          metadata: Json | null
+          mime_type: string | null
+          tenant_id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          case_id?: string | null
+          chain_of_custody?: Json | null
+          collected_by: string
+          created_at?: string
+          description?: string | null
+          evidence_number: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          hash_value?: string | null
+          id?: string
+          metadata?: Json | null
+          mime_type?: string | null
+          tenant_id: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string | null
+          chain_of_custody?: Json | null
+          collected_by?: string
+          created_at?: string
+          description?: string | null
+          evidence_number?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          hash_value?: string | null
+          id?: string
+          metadata?: Json | null
+          mime_type?: string | null
+          tenant_id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mobile_sessions: {
+        Row: {
+          app_version: string | null
+          biometric_enabled: boolean | null
+          created_at: string
+          device_token: string | null
+          id: string
+          last_active: string | null
+          offline_sync_enabled: boolean | null
+          platform: string | null
+          push_token: string | null
+          user_id: string
+        }
+        Insert: {
+          app_version?: string | null
+          biometric_enabled?: boolean | null
+          created_at?: string
+          device_token?: string | null
+          id?: string
+          last_active?: string | null
+          offline_sync_enabled?: boolean | null
+          platform?: string | null
+          push_token?: string | null
+          user_id: string
+        }
+        Update: {
+          app_version?: string | null
+          biometric_enabled?: boolean | null
+          created_at?: string
+          device_token?: string | null
+          id?: string
+          last_active?: string | null
+          offline_sync_enabled?: boolean | null
+          platform?: string | null
+          push_token?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       vy_apikey: {
         Row: {
           created_at: string
@@ -60,12 +304,17 @@ export type Database = {
       }
       vy_device: {
         Row: {
+          capabilities: Json | null
           created_at: string
           description: string | null
           enabled: boolean | null
+          firmware_version: string | null
+          health_score: number | null
           id: string
+          last_maintenance: string | null
           last_seen: string | null
           location: string | null
+          maintenance_schedule: string | null
           name: string
           online: boolean | null
           roi_polygons: Json | null
@@ -76,12 +325,17 @@ export type Database = {
           webrtc_url: string | null
         }
         Insert: {
+          capabilities?: Json | null
           created_at?: string
           description?: string | null
           enabled?: boolean | null
+          firmware_version?: string | null
+          health_score?: number | null
           id?: string
+          last_maintenance?: string | null
           last_seen?: string | null
           location?: string | null
+          maintenance_schedule?: string | null
           name: string
           online?: boolean | null
           roi_polygons?: Json | null
@@ -92,12 +346,17 @@ export type Database = {
           webrtc_url?: string | null
         }
         Update: {
+          capabilities?: Json | null
           created_at?: string
           description?: string | null
           enabled?: boolean | null
+          firmware_version?: string | null
+          health_score?: number | null
           id?: string
+          last_maintenance?: string | null
           last_seen?: string | null
           location?: string | null
+          maintenance_schedule?: string | null
           name?: string
           online?: boolean | null
           roi_polygons?: Json | null
@@ -526,6 +785,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_custody_entry: {
+        Args: {
+          action_type: string
+          actor_id: string
+          evidence_id: string
+          notes?: string
+        }
+        Returns: undefined
+      }
+      generate_case_number: {
+        Args: { tenant_id: string }
+        Returns: string
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
