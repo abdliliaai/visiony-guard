@@ -29,7 +29,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 const Settings = () => {
-  const { profile, isAdmin } = useAuth();
+  const { profile, isAdmin, isRootAdmin } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -38,7 +38,8 @@ const Settings = () => {
     firstName: profile?.first_name || '',
     lastName: profile?.last_name || '',
     phone: profile?.phone || '',
-    preferences: profile?.preferences || {}
+    preferences: profile?.preferences || {},
+    managedServicesMode: profile?.managed_services_mode || false
   });
 
   // Notification settings
@@ -77,7 +78,8 @@ const Settings = () => {
         .update({
           first_name: profileData.firstName,
           last_name: profileData.lastName,
-          phone: profileData.phone
+          phone: profileData.phone,
+          managed_services_mode: profileData.managedServicesMode
         })
         .eq('user_id', profile?.user_id);
 
@@ -231,6 +233,23 @@ const Settings = () => {
                   />
                 </div>
               </div>
+
+              {isRootAdmin && (
+                <div className="pt-6 border-t">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-medium">Enable Managed Services Mode (Multi-Tenancy)</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Switch to MSSP mode to manage multiple client tenants and their security systems
+                      </p>
+                    </div>
+                    <Switch
+                      checked={profileData.managedServicesMode}
+                      onCheckedChange={(checked) => setProfileData({...profileData, managedServicesMode: checked})}
+                    />
+                  </div>
+                </div>
+              )}
               
               <div className="flex justify-end mt-6">
                 <Button onClick={handleSaveProfile} disabled={loading}>

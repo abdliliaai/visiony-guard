@@ -163,7 +163,11 @@ export const Header = () => {
       {/* Camera Wizard */}
       <CameraWizard 
         open={showCameraWizard} 
-        onOpenChange={setShowCameraWizard} 
+        onClose={() => setShowCameraWizard(false)}
+        onComplete={() => {
+          setShowCameraWizard(false);
+          // Optionally refresh the page or show success message
+        }}
       />
     </>
   );

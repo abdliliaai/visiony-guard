@@ -731,6 +731,7 @@ export type Database = {
           created_at: string
           first_name: string | null
           last_name: string | null
+          managed_services_mode: boolean | null
           org_id: string
           phone: string | null
           preferences: Json | null
@@ -743,6 +744,7 @@ export type Database = {
           created_at?: string
           first_name?: string | null
           last_name?: string | null
+          managed_services_mode?: boolean | null
           org_id: string
           phone?: string | null
           preferences?: Json | null
@@ -755,6 +757,7 @@ export type Database = {
           created_at?: string
           first_name?: string | null
           last_name?: string | null
+          managed_services_mode?: boolean | null
           org_id?: string
           phone?: string | null
           preferences?: Json | null
@@ -793,6 +796,10 @@ export type Database = {
           notes?: string
         }
         Returns: undefined
+      }
+      can_manage_tenants: {
+        Args: { user_id: string }
+        Returns: boolean
       }
       generate_case_number: {
         Args: { tenant_id: string }

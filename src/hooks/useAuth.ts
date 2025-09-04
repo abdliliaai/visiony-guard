@@ -126,5 +126,7 @@ export const useAuth = () => {
     signOut,
     isAuthenticated: !!user,
     isAdmin: profile?.role === 'root_admin' || profile?.role === 'tenant_admin',
+    isRootAdmin: profile?.role === 'root_admin',
+    isManagedServicesMode: profile?.managed_services_mode || false,
   };
 };

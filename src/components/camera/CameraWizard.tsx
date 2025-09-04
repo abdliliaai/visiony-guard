@@ -25,7 +25,22 @@ import {
 
 interface CameraWizardProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
+  onComplete: () => void;
+  editingCamera?: CameraDevice | null;
+  tenantId?: string;
+}
+
+interface CameraDevice {
+  id: string;
+  name: string;
+  description?: string;
+  location?: string;
+  rtsp_url?: string;
+  webrtc_url?: string;
+  online: boolean;
+  enabled: boolean;
+  tenant_id: string;
 }
 
 interface DeviceForm {
@@ -60,7 +75,7 @@ const WIZARD_STEPS = [
   { id: 'complete', title: 'Complete', icon: CheckCircle2 },
 ];
 
-export const CameraWizard = ({ open, onOpenChange }: CameraWizardProps) => {
+export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantId }: CameraWizardProps) => {
   const { addDevice } = useDevices();
   const { toast } = useToast();
   
@@ -71,12 +86,12 @@ export const CameraWizard = ({ open, onOpenChange }: CameraWizardProps) => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   
   const [deviceForm, setDeviceForm] = useState<DeviceForm>({
-    name: '',
-    description: '',
-    rtsp_url: '',
-    webrtc_url: '',
-    location: '',
-    protocol: 'rtsp',
+    name: editingCamera?.name || '',
+    description: editingCamera?.description || '',
+    rtsp_url: editingCamera?.rtsp_url || '',
+    webrtc_url: editingCamera?.webrtc_url || '',
+    location: editingCamera?.location || '',
+    protocol: editingCamera?.rtsp_url ? 'rtsp' : 'webrtc',
   });
   
   const [roiPoints, setRoiPoints] = useState<ROIPoint[]>([]);
@@ -191,7 +206,8 @@ export const CameraWizard = ({ open, onOpenChange }: CameraWizardProps) => {
       });
 
       resetWizard();
-      onOpenChange(false);
+      onComplete();
+      onClose();
     } catch (error: any) {
       toast({
         title: "Setup Failed",
@@ -492,7 +508,7 @@ export const CameraWizard = ({ open, onOpenChange }: CameraWizardProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Camera</DialogTitle>
@@ -546,7 +562,7 @@ export const CameraWizard = ({ open, onOpenChange }: CameraWizardProps) => {
           </Button>
           
           <div className="flex space-x-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
             
