@@ -137,10 +137,10 @@ const Settings = () => {
     });
     // In real app, redirect to app stores
     setTimeout(() => {
-      const url = platform === 'ios' 
-        ? 'https://apps.apple.com/app/vision-y-security' 
-        : 'https://play.google.com/store/apps/details?id=com.visiony.security';
-      window.open(url, '_blank');
+            const url = platform === 'ios' 
+              ? 'https://apps.apple.com/app/vision-y-security' 
+              : 'https://play.google.com/store/apps/details?id=com.visiony.security';
+            window.open(url, '_blank');
     }, 1000);
   };
 

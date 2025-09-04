@@ -87,6 +87,8 @@ serve(async (req) => {
 
     // Send invitation email
     try {
+      const inviteUrl = `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovable.dev') || 'https://your-app-domain.com'}/auth?invite=${inviteToken}`;
+      
       const { error: emailError } = await supabase.functions.invoke('send-alert-email', {
         body: {
           to: adminUser.email,
@@ -97,7 +99,7 @@ Hello ${adminUser.first_name || 'there'},
 You've been invited to manage the security system for ${tenantData.name} on the Vision-Y platform.
 
 To get started:
-1. Visit: ${supabaseUrl.replace('https://mwhutmxhymjwimxeavbc.supabase.co', 'https://your-app-domain.com')}/auth?invite=${inviteToken}
+1. Visit: ${inviteUrl}
 2. Create your account using this email address
 3. Set up your security cameras and monitoring
 
@@ -109,21 +111,40 @@ Best regards,
 Vision-Y Security Team
           `,
           html: `
-            <h2>Welcome to Vision-Y Security Platform</h2>
-            <p>Hello ${adminUser.first_name || 'there'},</p>
-            <p>You've been invited to manage the security system for <strong>${tenantData.name}</strong> on the Vision-Y platform.</p>
-            
-            <h3>To get started:</h3>
-            <ol>
-              <li>Visit: <a href="${supabaseUrl.replace('https://mwhutmxhymjwimxeavbc.supabase.co', 'https://your-app-domain.com')}/auth?invite=${inviteToken}">Accept Invitation</a></li>
-              <li>Create your account using this email address</li>
-              <li>Set up your security cameras and monitoring</li>
-            </ol>
-            
-            <p><em>Your invitation expires in 7 days.</em></p>
-            <p>If you have any questions, please contact your security provider.</p>
-            
-            <p>Best regards,<br>Vision-Y Security Team</p>
+            <div style="max-width: 600px; margin: 0 auto; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;">
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Vision-Y Security</h1>
+                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">AI-Powered Security Platform</p>
+              </div>
+              
+              <div style="padding: 40px 20px; background: white;">
+                <h2 style="color: #1f2937; margin: 0 0 20px 0;">Welcome to Vision-Y Security Platform</h2>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 16px 0;">Hello ${adminUser.first_name || 'there'},</p>
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 16px 0;">You've been invited to manage the security system for <strong>${tenantData.name}</strong> on the Vision-Y platform.</p>
+                
+                <h3 style="color: #1f2937; margin: 30px 0 15px 0;">To get started:</h3>
+                <ol style="color: #374151; font-size: 16px; line-height: 1.6; margin: 16px 0; padding-left: 20px;">
+                  <li style="margin: 8px 0;">Visit: <a href="${inviteUrl}" style="color: #3b82f6; text-decoration: none;">Accept Invitation</a></li>
+                  <li style="margin: 8px 0;">Create your account using this email address</li>
+                  <li style="margin: 8px 0;">Set up your security cameras and monitoring</li>
+                </ol>
+                
+                <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0;">
+                  <p style="color: #92400e; font-size: 14px; margin: 0;"><strong>Important:</strong> Your invitation expires in 7 days.</p>
+                </div>
+                
+                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 16px 0;">If you have any questions, please contact your security provider.</p>
+              </div>
+              
+              <div style="background: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                  Best regards,<br>Vision-Y Security Team
+                </p>
+                <p style="color: #9ca3af; font-size: 12px; margin: 10px 0 0 0;">
+                  © ${new Date().getFullYear()} Vision-Y Security Platform. All rights reserved.
+                </p>
+              </div>
+            </div>
           `,
         },
       });

@@ -8,6 +8,8 @@ import { AuthPage } from "@/components/auth/AuthPage";
 import { MobileNav } from "@/components/mobile/MobileNav";
 import { SecurityChatbot } from "@/components/chat/SecurityChatbot";
 import Index from "./pages/Index";
+import MSSSPDashboard from "./pages/MSSSPDashboard";
+import CameraManagement from "./components/camera/CameraManagement";
 import Analytics from "./pages/Analytics";
 import LiveView from "./pages/LiveView";
 import Settings from "./pages/Settings";
@@ -32,7 +34,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppRoutes = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, isRootAdmin, isManagedServicesMode } = useAuth();
   
   if (loading) {
     return (
@@ -53,7 +55,15 @@ const AppRoutes = () => {
           path="/"
           element={
             <ProtectedRoute>
-              <Index />
+              {isRootAdmin && isManagedServicesMode ? <MSSSPDashboard /> : <Index />}
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cameras"
+          element={
+            <ProtectedRoute>
+              <CameraManagement />
             </ProtectedRoute>
           }
         />
