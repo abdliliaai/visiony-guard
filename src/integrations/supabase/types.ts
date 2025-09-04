@@ -14,7 +14,513 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      vy_apikey: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          key_hash: string
+          last_used: string | null
+          name: string
+          scopes: string[] | null
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          key_hash: string
+          last_used?: string | null
+          name: string
+          scopes?: string[] | null
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          key_hash?: string
+          last_used?: string | null
+          name?: string
+          scopes?: string[] | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vy_apikey_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vy_tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vy_device: {
+        Row: {
+          created_at: string
+          description: string | null
+          enabled: boolean | null
+          id: string
+          last_seen: string | null
+          location: string | null
+          name: string
+          online: boolean | null
+          roi_polygons: Json | null
+          rtsp_url: string | null
+          stream_config: Json | null
+          tenant_id: string
+          updated_at: string
+          webrtc_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          last_seen?: string | null
+          location?: string | null
+          name: string
+          online?: boolean | null
+          roi_polygons?: Json | null
+          rtsp_url?: string | null
+          stream_config?: Json | null
+          tenant_id: string
+          updated_at?: string
+          webrtc_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          last_seen?: string | null
+          location?: string | null
+          name?: string
+          online?: boolean | null
+          roi_polygons?: Json | null
+          rtsp_url?: string | null
+          stream_config?: Json | null
+          tenant_id?: string
+          updated_at?: string
+          webrtc_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vy_device_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vy_tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vy_event: {
+        Row: {
+          acknowledged: boolean | null
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          bbox: Json | null
+          class_name: Database["public"]["Enums"]["detection_class"] | null
+          clip_url: string | null
+          confidence: number | null
+          created_at: string
+          device_id: string
+          id: string
+          image_url: string | null
+          meta: Json | null
+          occurred_at: string
+          severity: string | null
+          tenant_id: string
+          type: Database["public"]["Enums"]["event_type"]
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          bbox?: Json | null
+          class_name?: Database["public"]["Enums"]["detection_class"] | null
+          clip_url?: string | null
+          confidence?: number | null
+          created_at?: string
+          device_id: string
+          id?: string
+          image_url?: string | null
+          meta?: Json | null
+          occurred_at?: string
+          severity?: string | null
+          tenant_id: string
+          type?: Database["public"]["Enums"]["event_type"]
+        }
+        Update: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          bbox?: Json | null
+          class_name?: Database["public"]["Enums"]["detection_class"] | null
+          clip_url?: string | null
+          confidence?: number | null
+          created_at?: string
+          device_id?: string
+          id?: string
+          image_url?: string | null
+          meta?: Json | null
+          occurred_at?: string
+          severity?: string | null
+          tenant_id?: string
+          type?: Database["public"]["Enums"]["event_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vy_event_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "vy_device"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vy_event_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vy_tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vy_invite: {
+        Row: {
+          accepted: boolean | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          org_id: string
+          role: Database["public"]["Enums"]["user_role"]
+          tenant_id: string
+          token: string
+        }
+        Insert: {
+          accepted?: boolean | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          org_id: string
+          role: Database["public"]["Enums"]["user_role"]
+          tenant_id: string
+          token?: string
+        }
+        Update: {
+          accepted?: boolean | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          org_id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          tenant_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vy_invite_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "vy_org"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vy_invite_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vy_tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vy_mobile_token: {
+        Row: {
+          created_at: string
+          device_info: Json | null
+          fcm_token: string
+          id: string
+          last_seen: string
+          platform: string
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: Json | null
+          fcm_token: string
+          id?: string
+          last_seen?: string
+          platform: string
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: Json | null
+          fcm_token?: string
+          id?: string
+          last_seen?: string
+          platform?: string
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vy_mobile_token_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vy_tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vy_org: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      vy_schedule: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          description: string | null
+          hours_json: Json
+          id: string
+          name: string
+          tenant_id: string
+          timezone: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          description?: string | null
+          hours_json?: Json
+          id?: string
+          name: string
+          tenant_id: string
+          timezone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          description?: string | null
+          hours_json?: Json
+          id?: string
+          name?: string
+          tenant_id?: string
+          timezone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vy_schedule_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vy_tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vy_setting: {
+        Row: {
+          id: string
+          key: string
+          tenant_id: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          id?: string
+          key: string
+          tenant_id: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          id?: string
+          key?: string
+          tenant_id?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vy_setting_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vy_tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vy_tenant: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          name: string
+          org_id: string
+          parent_tenant_id: string | null
+          timezone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          org_id: string
+          parent_tenant_id?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          org_id?: string
+          parent_tenant_id?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vy_tenant_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "vy_org"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vy_tenant_parent_tenant_id_fkey"
+            columns: ["parent_tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vy_tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vy_threshold: {
+        Row: {
+          class_name: Database["public"]["Enums"]["detection_class"]
+          enabled: boolean | null
+          id: string
+          min_confidence: number
+          nms_iou: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          class_name: Database["public"]["Enums"]["detection_class"]
+          enabled?: boolean | null
+          id?: string
+          min_confidence?: number
+          nms_iou?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          class_name?: Database["public"]["Enums"]["detection_class"]
+          enabled?: boolean | null
+          id?: string
+          min_confidence?: number
+          nms_iou?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vy_threshold_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vy_tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vy_user_profile: {
+        Row: {
+          created_at: string
+          first_name: string | null
+          last_name: string | null
+          org_id: string
+          phone: string | null
+          preferences: Json | null
+          role: Database["public"]["Enums"]["user_role"]
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          first_name?: string | null
+          last_name?: string | null
+          org_id: string
+          phone?: string | null
+          preferences?: Json | null
+          role?: Database["public"]["Enums"]["user_role"]
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          first_name?: string | null
+          last_name?: string | null
+          org_id?: string
+          phone?: string | null
+          preferences?: Json | null
+          role?: Database["public"]["Enums"]["user_role"]
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vy_user_profile_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "vy_org"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vy_user_profile_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vy_tenant"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +529,22 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      detection_class:
+        | "person"
+        | "car"
+        | "truck"
+        | "motorcycle"
+        | "bicycle"
+        | "animal"
+        | "package"
+        | "unknown"
+      event_type: "detection" | "alert" | "behavior" | "system"
+      user_role:
+        | "root_admin"
+        | "tenant_admin"
+        | "manager"
+        | "analyst"
+        | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +671,19 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      detection_class: [
+        "person",
+        "car",
+        "truck",
+        "motorcycle",
+        "bicycle",
+        "animal",
+        "package",
+        "unknown",
+      ],
+      event_type: ["detection", "alert", "behavior", "system"],
+      user_role: ["root_admin", "tenant_admin", "manager", "analyst", "viewer"],
+    },
   },
 } as const
