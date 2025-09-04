@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthPage } from "@/components/auth/AuthPage";
 import { MobileNav } from "@/components/mobile/MobileNav";
+import { SecurityChatbot } from "@/components/chat/SecurityChatbot";
 import Index from "./pages/Index";
 import Analytics from "./pages/Analytics";
 import LiveView from "./pages/LiveView";
@@ -102,6 +103,9 @@ const AppRoutes = () => {
       
       {/* Mobile Navigation */}
       {isAuthenticated && <MobileNav />}
+      
+      {/* AI Security Chatbot */}
+      {isAuthenticated && <SecurityChatbot />}
     </div>
   );
 };

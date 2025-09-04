@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Filter, FileText, Calendar, AlertCircle, CheckCircle2, Clock, Archive } from 'lucide-react';
+import { Plus, Search, Filter, FileText, Calendar, AlertCircle, CheckCircle2, Clock, Archive, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -117,13 +117,24 @@ export default function Cases() {
       <div className="container px-6 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Case Management
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Track and manage security incidents and cases
-            </p>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.history.back()}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Case Management
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                Track and manage security incidents and cases
+              </p>
+            </div>
           </div>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
