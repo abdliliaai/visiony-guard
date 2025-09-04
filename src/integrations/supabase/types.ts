@@ -526,7 +526,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_current_user_tenant: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      vy_event_summary: {
+        Args: { _from?: string; _tenant_id: string; _to?: string }
+        Returns: {
+          class_name: string
+          device_name: string
+          event_count: number
+          severity_counts: Json
+        }[]
+      }
     }
     Enums: {
       detection_class:
