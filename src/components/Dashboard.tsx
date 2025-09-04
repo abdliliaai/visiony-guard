@@ -11,11 +11,34 @@ import {
   Download,
   Filter,
   BarChart3,
-  MapPin
+  MapPin,
+  AlertTriangle,
+  CheckCircle2
 } from 'lucide-react';
 import heroImage from '@/assets/security-camera-hero.jpg';
+import { useAuth } from '@/hooks/useAuth';
+import { useEvents } from '@/hooks/useEvents';
+import { useDevices } from '@/hooks/useDevices';
+
+const getSeverityColor = (severity: string) => {
+  switch (severity) {
+    case 'critical': return 'bg-destructive';
+    case 'high': return 'bg-destructive';
+    case 'medium': return 'bg-warning';
+    case 'low': return 'bg-success';
+    default: return 'bg-success';
+  }
+};
 
 export const Dashboard: React.FC = () => {
+  const { profile } = useAuth();
+  const { events, loading: eventsLoading, acknowledgeEvent } = useEvents(10);
+  const { devices, loading: devicesLoading } = useDevices();
+
+  const onlineDevices = devices.filter(d => d.online).length;
+  const totalEvents = events.length;
+  const activeAlerts = events.filter(e => !e.acknowledged && e.severity !== 'low').length;
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -38,9 +61,9 @@ export const Dashboard: React.FC = () => {
                 ✨ AI-Powered Detection Active
               </Badge>
               <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                Advanced Security
+                Welcome back, {profile?.first_name || 'User'}!
                 <span className="block bg-gradient-primary bg-clip-text text-transparent">
-                  Intelligence Platform
+                  Security Intelligence
                 </span>
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed">
@@ -63,15 +86,21 @@ export const Dashboard: React.FC = () => {
             {/* Quick Stats */}
             <div className="grid grid-cols-3 gap-4 pt-6">
               <div className="text-center">
-                <p className="text-2xl font-bold text-success">12</p>
+                <p className="text-2xl font-bold text-success">
+                  {devicesLoading ? '...' : onlineDevices}
+                </p>
                 <p className="text-sm text-muted-foreground">Cameras Online</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-primary">847</p>
-                <p className="text-sm text-muted-foreground">Events Today</p>
+                <p className="text-2xl font-bold text-primary">
+                  {eventsLoading ? '...' : totalEvents}
+                </p>
+                <p className="text-sm text-muted-foreground">Recent Events</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-warning">3</p>
+                <p className="text-2xl font-bold text-warning">
+                  {eventsLoading ? '...' : activeAlerts}
+                </p>
                 <p className="text-sm text-muted-foreground">Active Alerts</p>
               </div>
             </div>
@@ -111,56 +140,54 @@ export const Dashboard: React.FC = () => {
           </div>
           
           <div className="space-y-4">
-            {[
-              {
-                time: '14:32',
-                event: 'Unauthorized access attempt detected',
-                location: 'Main Entrance - Zone A',
-                severity: 'high',
-                action: 'Alert sent to security team'
-              },
-              {
-                time: '14:15',
-                event: 'Vehicle license plate captured',
-                location: 'Parking Lot B',
-                severity: 'low',
-                action: 'ABC-1234 logged in database'
-              },
-              {
-                time: '13:58',
-                event: 'Motion detected in restricted area',
-                location: 'Warehouse Floor - Section C',
-                severity: 'medium',
-                action: 'Recording activated'
-              },
-              {
-                time: '13:45',
-                event: 'Person loitering detected',
-                location: 'Loading Bay',
-                severity: 'medium',
-                action: 'Monitoring continued'
-              }
-            ].map((item, index) => (
-              <div key={index} className="flex items-center gap-4 p-4 bg-surface rounded-lg hover:bg-surface-hover transition-colors">
-                <div className="text-sm font-mono text-muted-foreground min-w-[60px]">
-                  {item.time}
-                </div>
-                <div className={`w-2 h-2 rounded-full ${
-                  item.severity === 'high' ? 'bg-destructive' :
-                  item.severity === 'medium' ? 'bg-warning' : 'bg-success'
-                }`}></div>
-                <div className="flex-1">
-                  <p className="font-medium">{item.event}</p>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                    <MapPin className="w-3 h-3" />
-                    {item.location}
+            {eventsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : events.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No recent events. Your security system is monitoring normally.
+              </div>
+            ) : (
+              events.map((event) => (
+                <div key={event.id} className="flex items-center gap-4 p-4 bg-surface rounded-lg hover:bg-surface-hover transition-colors">
+                  <div className="text-sm font-mono text-muted-foreground min-w-[60px]">
+                    {new Date(event.occurred_at).toLocaleTimeString()}
+                  </div>
+                  <div className={`w-2 h-2 rounded-full ${getSeverityColor(event.severity)}`}></div>
+                  <div className="flex-1">
+                    <p className="font-medium">
+                      {event.class_name ? `${event.class_name} detected` : event.type}
+                      {event.confidence && (
+                        <span className="text-muted-foreground ml-2">
+                          ({Math.round(event.confidence * 100)}% confidence)
+                        </span>
+                      )}
+                    </p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                      <MapPin className="w-3 h-3" />
+                      {event.device?.name || 'Unknown Device'}
+                      {event.device?.location && ` - ${event.device.location}`}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {event.acknowledged ? (
+                      <CheckCircle2 className="h-4 w-4 text-success" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 text-warning" />
+                    )}
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => event.acknowledged ? null : acknowledgeEvent(event.id)}
+                      disabled={event.acknowledged}
+                    >
+                      {event.acknowledged ? 'Acknowledged' : 'Acknowledge'}
+                    </Button>
                   </div>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {item.action}
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </Card>
       </main>
