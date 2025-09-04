@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Analytics from "./pages/Analytics";
 import LiveView from "./pages/LiveView";
 import Settings from "./pages/Settings";
+import CaseDetails from "./pages/CaseDetails";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,6 +74,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute>
             <Settings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/case/:type/:caseId"
+        element={
+          <ProtectedRoute>
+            <CaseDetails />
           </ProtectedRoute>
         }
       />

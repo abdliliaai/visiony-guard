@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   CheckCircle2
 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -70,17 +71,25 @@ const Settings = () => {
   const handleSaveProfile = async () => {
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase
+        .from('vy_user_profile')
+        .update({
+          first_name: profileData.firstName,
+          last_name: profileData.lastName,
+          phone: profileData.phone
+        })
+        .eq('user_id', profile?.user_id);
+
+      if (error) throw error;
       
       toast({
         title: "Profile Updated",
         description: "Your profile settings have been saved successfully.",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update profile settings.",
+        description: error.message || "Failed to update profile settings.",
         variant: "destructive",
       });
     } finally {
@@ -91,21 +100,45 @@ const Settings = () => {
   const handleSaveNotifications = async () => {
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase
+        .from('vy_user_profile')
+        .update({
+          preferences: {
+            ...(profile?.preferences && typeof profile.preferences === 'object' ? profile.preferences : {}),
+            notifications
+          }
+        })
+        .eq('user_id', profile?.user_id);
+
+      if (error) throw error;
       
       toast({
         title: "Notifications Updated",
         description: "Your notification preferences have been saved.",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error", 
-        description: "Failed to update notification settings.",
+        description: error.message || "Failed to update notification settings.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDownloadMobileApp = (platform: 'ios' | 'android') => {
+    toast({
+      title: `Download ${platform === 'ios' ? 'iOS' : 'Android'} App`,
+      description: `Redirecting to ${platform === 'ios' ? 'App Store' : 'Google Play'}...`,
+    });
+    // In real app, redirect to app stores
+    setTimeout(() => {
+      const url = platform === 'ios' 
+        ? 'https://apps.apple.com/app/vision-y-security' 
+        : 'https://play.google.com/store/apps/details?id=com.visiony.security';
+      window.open(url, '_blank');
+    }, 1000);
   };
 
   return (
@@ -480,10 +513,10 @@ const Settings = () => {
                     Vision-Y mobile app is not currently installed. Download it from your app store to receive push notifications and access mobile-specific features.
                   </p>
                   <div className="flex gap-2 mt-3">
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => handleDownloadMobileApp('ios')}>
                       Download for iOS
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => handleDownloadMobileApp('android')}>
                       Download for Android
                     </Button>
                   </div>

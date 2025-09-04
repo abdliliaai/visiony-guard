@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart3, TrendingUp, TrendingDown, Calendar, Download, Filter, Eye, AlertTriangle, Users, Car, Package } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { useToast } from '@/hooks/use-toast';
 
 const mockDetectionData = [
   { name: 'Jan', vandalism: 4, loitering: 12, total: 16 },
@@ -41,10 +43,44 @@ const pieData = [
 
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState('last30days');
+  const { data, loading, exportData } = useAnalytics(timeRange);
+  const { toast } = useToast();
 
-  const totalIncidents = mockDetectionData.reduce((sum, item) => sum + item.total, 0);
-  const vandalismTotal = mockDetectionData.reduce((sum, item) => sum + item.vandalism, 0);
-  const loiteringTotal = mockDetectionData.reduce((sum, item) => sum + item.loitering, 0);
+  const handleExport = async () => {
+    try {
+      await exportData('csv');
+      toast({
+        title: "Export Complete",
+        description: "Analytics data has been exported successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to export analytics data.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFilter = () => {
+    toast({
+      title: "Filter Options",
+      description: "Advanced filtering options will be available soon.",
+    });
+  };
+
+  if (loading) return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    </div>
+  );
+
+  const totalIncidents = data?.totalStats.totalIncidents || 0;
+  const vandalismTotal = data?.totalStats.vandalismTotal || 0;
+  const loiteringTotal = data?.totalStats.loiteringTotal || 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,11 +108,11 @@ const Analytics = () => {
                 <SelectItem value="last1year">Last 1 year</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleFilter}>
               <Filter className="w-4 h-4 mr-2" />
               Filter
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="w-4 h-4 mr-2" />
               Export
             </Button>
@@ -158,7 +194,7 @@ const Analytics = () => {
                   <Badge variant="secondary">Monthly</Badge>
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={mockDetectionData}>
+                  <LineChart data={data?.detectionTrends || []}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                     <XAxis dataKey="name" />
                     <YAxis />
@@ -177,7 +213,7 @@ const Analytics = () => {
                   <Badge variant="secondary">Cumulative</Badge>
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={mockDetectionData}>
+                  <AreaChart data={data?.detectionTrends || []}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                     <XAxis dataKey="name" />
                     <YAxis />
@@ -201,7 +237,7 @@ const Analytics = () => {
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={pieData}
+                      data={data?.incidentDistribution || []}
                       cx="50%"
                       cy="50%"
                       outerRadius={80}
@@ -209,7 +245,7 @@ const Analytics = () => {
                       dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     >
-                      {pieData.map((entry, index) => (
+                      {(data?.incidentDistribution || []).map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
@@ -224,7 +260,7 @@ const Analytics = () => {
                   <Badge variant="secondary">Bar Chart</Badge>
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={mockDetectionData}>
+                  <BarChart data={data?.detectionTrends || []}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                     <XAxis dataKey="name" />
                     <YAxis />
@@ -245,7 +281,7 @@ const Analytics = () => {
                 <Badge variant="secondary">Hourly Breakdown</Badge>
               </div>
               <ResponsiveContainer width="100%" height={400}>
-                <AreaChart data={mockHourlyData}>
+                <AreaChart data={data?.hourlyActivity || []}>
                   <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                   <XAxis dataKey="hour" />
                   <YAxis />
@@ -263,13 +299,7 @@ const Analytics = () => {
                 <Badge variant="secondary">Risk Analysis</Badge>
               </div>
               <div className="space-y-4">
-                {[
-                  { name: 'Main Entrance', incidents: 45, risk: 'High' },
-                  { name: 'Parking Lot A', incidents: 32, risk: 'Medium' },
-                  { name: 'Loading Bay', incidents: 28, risk: 'Medium' },
-                  { name: 'Side Gate', incidents: 18, risk: 'Low' },
-                  { name: 'Garden Area', incidents: 12, risk: 'Low' },
-                ].map((location) => (
+                {(data?.locationHotspots || []).map((location) => (
                   <div key={location.name} className="flex items-center justify-between p-4 bg-surface rounded-lg">
                     <div>
                       <p className="font-medium">{location.name}</p>

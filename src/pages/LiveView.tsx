@@ -24,6 +24,8 @@ import {
 import { useDevices } from '@/hooks/useDevices';
 import { useEvents } from '@/hooks/useEvents';
 import { Input } from '@/components/ui/input';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 const mockCases = {
   vandalism: [
@@ -107,9 +109,42 @@ const mockCases = {
 const LiveView = () => {
   const { devices, loading: devicesLoading } = useDevices();
   const { events } = useEvents(20);
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [selectedCamera, setSelectedCamera] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [isPlayingAll, setIsPlayingAll] = useState(false);
+
+  const handlePlayAll = () => {
+    setIsPlayingAll(true);
+    toast({
+      title: "Starting All Cameras",
+      description: "All camera feeds are now live.",
+    });
+  };
+
+  const handlePauseAll = () => {
+    setIsPlayingAll(false);
+    toast({
+      title: "Pausing All Cameras",
+      description: "All camera feeds have been paused.",
+    });
+  };
+
+  const handleCameraControl = (action: string, deviceName: string) => {
+    toast({
+      title: `Camera ${action}`,
+      description: `${action} applied to ${deviceName}.`,
+    });
+  };
+
+  const handleMaximize = (deviceName: string) => {
+    toast({
+      title: "Maximize Camera",
+      description: `${deviceName} opened in full screen mode.`,
+    });
+  };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -191,11 +226,11 @@ const LiveView = () => {
                     </SelectContent>
                   </Select>
                   <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={handlePlayAll} disabled={isPlayingAll}>
                       <Play className="w-4 h-4 mr-2" />
-                      Play All
+                      {isPlayingAll ? 'Playing All' : 'Play All'}
                     </Button>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={handlePauseAll} disabled={!isPlayingAll}>
                       <Pause className="w-4 h-4 mr-2" />
                       Pause All
                     </Button>
@@ -224,7 +259,12 @@ const LiveView = () => {
                           <span className="text-white text-xs font-medium">LIVE</span>
                         </div>
                         <div className="absolute top-3 right-3">
-                          <Button size="sm" variant="ghost" className="text-white hover:text-white hover:bg-black/20">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="text-white hover:text-white hover:bg-black/20"
+                            onClick={() => handleMaximize(device.name)}
+                          >
                             <Maximize className="w-4 h-4" />
                           </Button>
                         </div>
@@ -249,10 +289,18 @@ const LiveView = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Button size="sm" variant="ghost">
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => handleCameraControl('Volume Toggle', device.name)}
+                        >
                           <Volume2 className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" variant="ghost">
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => handleCameraControl('Restart', device.name)}
+                        >
                           <RotateCcw className="w-4 h-4" />
                         </Button>
                       </div>
@@ -331,11 +379,16 @@ const LiveView = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/case/vandalism/${case_.id}`)}>
                         View Details
                       </Button>
                       {case_.status !== 'resolved' && (
-                        <Button size="sm">
+                        <Button size="sm" onClick={() => {
+                          toast({
+                            title: "Action Required",
+                            description: "Case escalated for immediate attention.",
+                          });
+                        }}>
                           Take Action
                         </Button>
                       )}
@@ -411,11 +464,16 @@ const LiveView = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/case/loitering/${case_.id}`)}>
                         View Details
                       </Button>
                       {case_.status !== 'resolved' && (
-                        <Button size="sm">
+                        <Button size="sm" onClick={() => {
+                          toast({
+                            title: "Action Required", 
+                            description: "Case escalated for immediate attention.",
+                          });
+                        }}>
                           Take Action
                         </Button>
                       )}
