@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCases } from '@/hooks/useCases';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface CaseFormData {
   title: string;
@@ -24,6 +24,7 @@ interface CaseFormData {
 }
 
 export default function Cases() {
+  const navigate = useNavigate();
   const { cases, loading, createCase } = useCases();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -121,11 +122,11 @@ export default function Cases() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.history.back()}
+              onClick={() => navigate('/')}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back
+              Back to Home
             </Button>
             <div>
               <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
