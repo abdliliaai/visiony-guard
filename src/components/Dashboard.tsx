@@ -19,6 +19,7 @@ import heroImage from '@/assets/security-camera-hero.jpg';
 import { useAuth } from '@/hooks/useAuth';
 import { useEvents } from '@/hooks/useEvents';
 import { useDevices } from '@/hooks/useDevices';
+import { MobileFeatures } from '@/components/mobile/MobileFeatures';
 
 const getSeverityColor = (severity: string) => {
   switch (severity) {
@@ -116,6 +117,9 @@ export const Dashboard: React.FC = () => {
         {/* Camera Feeds */}
         <CameraGrid />
         
+        {/* Mobile Features Card */}
+        <MobileFeatures />
+
         {/* Activity Timeline */}
         <Card className="p-6 bg-card">
           <div className="flex items-center justify-between mb-6">

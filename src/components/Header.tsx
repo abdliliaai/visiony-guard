@@ -13,6 +13,7 @@ import {
 import { Shield, User, Settings, LogOut, Building2, Plus, Camera } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { CameraWizard } from '@/components/camera/CameraWizard';
+import { TenantSwitcher } from '@/components/tenant/TenantSwitcher';
 
 export const Header = () => {
   const { user, profile, signOut, isAdmin } = useAuth();
@@ -65,6 +66,11 @@ export const Header = () => {
               <Plus className="mr-2 h-4 w-4" />
               Add Camera
             </Button>
+
+            {/* Tenant Switcher for Multi-tenant Users */}
+            {profile && (
+              <TenantSwitcher className="min-w-[200px]" />
+            )}
 
             {/* System Status */}
             <div className="flex items-center space-x-2">
