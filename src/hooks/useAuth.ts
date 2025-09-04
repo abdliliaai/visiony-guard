@@ -5,7 +5,7 @@ import type { Database } from '@/integrations/supabase/types';
 
 type UserProfile = Database['public']['Tables']['vy_user_profile']['Row'];
 
-export const useAuth = () => {
+export const useAuthHook = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
