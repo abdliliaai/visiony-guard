@@ -224,7 +224,7 @@ export class RealtimeChat {
       this.audioQueue = new AudioQueue(this.audioContext);
       
       // Connect to WebSocket (using the correct Supabase function URL)
-      const wsUrl = 'wss://mwhutmxhymjwimxeavbc.functions.supabase.co/realtime-chat';
+      const wsUrl = 'wss://mwhutmxhymjwimxeavbc.functions.supabase.co/functions/v1/realtime-chat';
       console.log('Connecting to WebSocket:', wsUrl);
       
       this.ws = new WebSocket(wsUrl);
