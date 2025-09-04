@@ -1,20 +1,36 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BarChart3, Video, FileText, Settings, Users, Shield, AlertCircle } from 'lucide-react';
+import { Home, BarChart3, Video, FileText, Settings, Users, Shield, AlertCircle, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useCases } from '@/hooks/useCases';
+
+interface NavItem {
+  path: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  badge?: string;
+  badgeVariant?: 'destructive' | 'secondary';
+}
 
 export function MainNav() {
   const location = useLocation();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isRootAdmin, isManagedServicesMode } = useAuth();
   const { cases } = useCases();
   
   const openCases = cases.filter(c => c.status === 'open').length;
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { path: '/', icon: Home, label: 'Dashboard' },
+  ];
+
+  // Add MSSP Dashboard for root admins with managed services mode
+  if (isRootAdmin && isManagedServicesMode) {
+    navItems.push({ path: '/mssp', icon: Building, label: 'MSSP Dashboard' });
+  }
+
+  navItems.push(
     { path: '/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/live', icon: Video, label: 'Live View' },
     { 
@@ -23,8 +39,8 @@ export function MainNav() {
       label: 'Cases',
       badge: openCases > 0 ? openCases.toString() : undefined,
       badgeVariant: openCases > 0 ? 'destructive' as const : undefined
-    },
-  ];
+    }
+  );
 
   if (isAdmin) {
     navItems.push(

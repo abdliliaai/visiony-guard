@@ -57,7 +57,15 @@ const AppRoutes = () => {
           path="/"
           element={
             <ProtectedRoute>
-              {isRootAdmin && isManagedServicesMode ? <MSSSPDashboard /> : <Index />}
+              <Index />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mssp"
+          element={
+            <ProtectedRoute>
+              <MSSSPDashboard />
             </ProtectedRoute>
           }
         />

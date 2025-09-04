@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Shield, User, Settings, LogOut, Building2, Plus, Camera } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { CameraWizard } from '@/components/camera/CameraWizard';
 import { TenantSwitcher } from '@/components/tenant/TenantSwitcher';
 import { MainNav } from '@/components/navigation/MainNav';
