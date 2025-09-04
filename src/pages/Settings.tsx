@@ -21,7 +21,8 @@ import {
   Globe, 
   Save,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  ArrowLeft
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -147,13 +148,24 @@ const Settings = () => {
       
       <main className="container px-6 py-8">
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Settings
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Manage your account, security, and system preferences
-            </p>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.history.back()}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Settings
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                Manage your account, security, and system preferences
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-5 h-5 text-success" />

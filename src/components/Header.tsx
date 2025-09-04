@@ -49,10 +49,12 @@ export const Header = () => {
                 <Shield className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                  Vision-Y
-                </h1>
-                <p className="text-xs text-muted-foreground -mt-1">Security Intelligence</p>
+                <Link to="/" className="block">
+                  <h1 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                    Vision-Y
+                  </h1>
+                  <p className="text-xs text-muted-foreground -mt-1">Security Intelligence</p>
+                </Link>
               </div>
             </div>
           </div>
