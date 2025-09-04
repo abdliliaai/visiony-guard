@@ -12,37 +12,54 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        if (!mounted) return;
+        
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
+        // Defer profile fetching to avoid loops
         if (session?.user) {
-          // Fetch user profile
-          const { data: profileData, error } = await supabase
-            .from('vy_user_profile')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .single();
-          
-          if (error) {
-            console.error('Error fetching user profile:', error);
-            setProfile(null);
-          } else {
-            setProfile(profileData as UserProfile);
-          }
+          setTimeout(async () => {
+            if (!mounted) return;
+            
+            try {
+              const { data: profileData, error } = await supabase
+                .from('vy_user_profile')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .single();
+              
+              if (!mounted) return;
+              
+              if (error) {
+                console.error('Error fetching user profile:', error);
+                setProfile(null);
+              } else {
+                setProfile(profileData as UserProfile);
+              }
+            } catch (err) {
+              console.error('Profile fetch error:', err);
+              if (mounted) setProfile(null);
+            }
+            
+            if (mounted) setLoading(false);
+          }, 0);
         } else {
           setProfile(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
       setSession(session);
       setUser(session?.user ?? null);
       if (!session) {
@@ -50,7 +67,10 @@ export const useAuth = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
