@@ -797,26 +797,11 @@ export type Database = {
         }
         Returns: undefined
       }
-      can_manage_tenants: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      generate_case_number: {
-        Args: { tenant_id: string }
-        Returns: string
-      }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_user_tenant: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      can_manage_tenants: { Args: { user_id: string }; Returns: boolean }
+      generate_case_number: { Args: { tenant_id: string }; Returns: string }
+      get_current_user_role: { Args: never; Returns: string }
+      get_current_user_tenant: { Args: never; Returns: string }
+      is_admin: { Args: never; Returns: boolean }
       vy_event_summary: {
         Args: { _from?: string; _tenant_id: string; _to?: string }
         Returns: {
