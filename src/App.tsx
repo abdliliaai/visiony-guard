@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { TenantProvider } from "@/contexts/TenantContext";
 import { AuthPage } from "@/components/auth/AuthPage";
 import { MobileNav } from "@/components/mobile/MobileNav";
 import { SecurityChatbot } from "@/components/chat/SecurityChatbot";
@@ -158,7 +159,9 @@ const App = () => (
         }}
       >
         <AuthProvider>
-          <AppRoutes />
+          <TenantProvider>
+            <AppRoutes />
+          </TenantProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

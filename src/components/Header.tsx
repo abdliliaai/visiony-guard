@@ -10,15 +10,17 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Shield, User, Settings, LogOut, Building2, Plus, Camera } from 'lucide-react';
+import { Shield, User, Settings, LogOut, Building2, Plus, Camera, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTenant } from '@/contexts/TenantContext';
 import { CameraWizard } from '@/components/camera/CameraWizard';
 import { TenantSwitcher } from '@/components/tenant/TenantSwitcher';
 import { MainNav } from '@/components/navigation/MainNav';
 import { Link } from 'react-router-dom';
 
 export const Header = () => {
-  const { user, profile, signOut, isAdmin } = useAuth();
+  const { user, profile, signOut, isAdmin, isRootAdmin } = useAuth();
+  const { isImpersonating } = useTenant();
   const [showCameraWizard, setShowCameraWizard] = useState(false);
 
   const handleSignOut = async () => {
@@ -65,6 +67,19 @@ export const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
+            {/* Back to MSSP Dashboard Button */}
+            {isRootAdmin && isImpersonating && (
+              <Button 
+                variant="outline"
+                asChild
+              >
+                <Link to="/mssp">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to MSSP
+                </Link>
+              </Button>
+            )}
+            
             {/* Add Camera Button */}
             <Button 
               onClick={() => setShowCameraWizard(true)}

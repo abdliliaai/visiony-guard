@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTenant } from '@/contexts/TenantContext';
 import type { Database } from '@/integrations/supabase/types';
 
 type Device = Database['public']['Tables']['vy_device']['Row'];
@@ -9,19 +10,20 @@ type DeviceUpdate = Database['public']['Tables']['vy_device']['Update'];
 
 export const useDevices = () => {
   const { profile } = useAuth();
+  const { currentTenantId } = useTenant();
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchDevices = async () => {
-    if (!profile?.tenant_id) return;
+    if (!currentTenantId) return;
 
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('vy_device')
         .select('*')
-        .eq('tenant_id', profile.tenant_id)
+        .eq('tenant_id', currentTenantId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -35,14 +37,14 @@ export const useDevices = () => {
   };
 
   const addDevice = async (deviceData: Omit<DeviceInsert, 'tenant_id'>) => {
-    if (!profile?.tenant_id) return { error: 'No tenant selected' };
+    if (!currentTenantId) return { error: 'No tenant selected' };
 
     try {
       const { data, error } = await supabase
         .from('vy_device')
         .insert({
           ...deviceData,
-          tenant_id: profile.tenant_id,
+          tenant_id: currentTenantId,
         })
         .select()
         .single();
@@ -98,11 +100,11 @@ export const useDevices = () => {
 
   useEffect(() => {
     fetchDevices();
-  }, [profile?.tenant_id]);
+  }, [currentTenantId]);
 
   // Set up realtime subscription for device status updates
   useEffect(() => {
-    if (!profile?.tenant_id) return;
+    if (!currentTenantId) return;
 
     const channel = supabase
       .channel('device-changes')
@@ -112,7 +114,7 @@ export const useDevices = () => {
           event: '*',
           schema: 'public',
           table: 'vy_device',
-          filter: `tenant_id=eq.${profile.tenant_id}`,
+          filter: `tenant_id=eq.${currentTenantId}`,
         },
         (payload) => {
           console.log('Device change:', payload);
@@ -133,7 +135,7 @@ export const useDevices = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [profile?.tenant_id]);
+  }, [currentTenantId]);
 
   return {
     devices,

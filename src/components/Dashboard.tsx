@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import heroImage from '@/assets/security-camera-hero.jpg';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTenant } from '@/contexts/TenantContext';
 import { useEvents } from '@/hooks/useEvents';
 import { useDevices } from '@/hooks/useDevices';
 import { MobileFeatures } from '@/components/mobile/MobileFeatures';
@@ -34,6 +35,7 @@ const getSeverityColor = (severity: string) => {
 
 export const Dashboard: React.FC = () => {
   const { profile } = useAuth();
+  const { isImpersonating } = useTenant();
   const { events, loading: eventsLoading, acknowledgeEvent } = useEvents(10);
   const { devices, loading: devicesLoading } = useDevices();
 
@@ -44,6 +46,16 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+      
+      {/* Impersonation Banner */}
+      {isImpersonating && (
+        <div className="bg-warning/10 border-b border-warning/20 px-6 py-3">
+          <div className="container flex items-center justify-center gap-2 text-warning">
+            <AlertTriangle className="w-4 h-4" />
+            <span className="font-medium">Viewing as different tenant - Data shown is for this tenant only</span>
+          </div>
+        </div>
+      )}
       
       {/* Hero Section */}
       <section className="relative overflow-hidden border-b border-border">
