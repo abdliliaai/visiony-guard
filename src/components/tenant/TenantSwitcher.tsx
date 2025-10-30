@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTenant } from '@/contexts/TenantContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -43,6 +44,7 @@ interface TenantSwitcherProps {
 
 export const TenantSwitcher = ({ className }: TenantSwitcherProps) => {
   const { profile, isAdmin } = useAuth();
+  const { currentTenantId, setCurrentTenantId } = useTenant();
   const { toast } = useToast();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
@@ -110,16 +112,19 @@ export const TenantSwitcher = ({ className }: TenantSwitcherProps) => {
   const switchTenant = async (tenantId: string) => {
     setLoading(true);
     try {
-      // In a real implementation, this would update the user's session
-      // For now, we'll show a toast indicating the switch
       const tenant = tenants.find(t => t.id === tenantId);
       
+      // Update global tenant context
+      setCurrentTenantId(tenantId);
+      setCurrentTenant(tenant || null);
+      
       toast({
-        title: "Tenant Switch",
-        description: `Switched to ${tenant?.name}. In production, this would update your session context.`,
+        title: "Tenant Switched",
+        description: `Now viewing ${tenant?.name}`,
       });
       
-      setCurrentTenant(tenant || null);
+      // Reload the page to refresh all tenant-specific data
+      window.location.reload();
     } catch (error: any) {
       toast({
         title: "Switch Failed",
