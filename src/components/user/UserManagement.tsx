@@ -32,6 +32,7 @@ const UserManagement = () => {
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
   const [formData, setFormData] = useState({
     email: '',
+    password: '',
     firstName: '',
     lastName: '',
     role: 'viewer' as const,
@@ -83,7 +84,7 @@ const UserManagement = () => {
       const { data, error } = await supabase.functions.invoke('auth-signup', {
         body: {
           email: userData.email,
-          password: 'TempPassword123!', // User will need to reset
+          password: userData.password,
           firstName: userData.firstName,
           lastName: userData.lastName,
           role: userData.role,
@@ -99,7 +100,7 @@ const UserManagement = () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success('User created successfully');
       setIsDialogOpen(false);
-      setFormData({ email: '', firstName: '', lastName: '', role: 'viewer', tenantId: '' });
+      setFormData({ email: '', password: '', firstName: '', lastName: '', role: 'viewer', tenantId: '' });
     },
     onError: (error: any) => {
       const errorMessage = error.message || 'Failed to create user';
@@ -204,6 +205,20 @@ const UserManagement = () => {
                 </div>
                 
                 <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="password" className="text-right">
+                    Password
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="col-span-3"
+                    placeholder="Minimum 8 characters"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="firstName" className="text-right">
                     First Name
                   </Label>
@@ -269,7 +284,7 @@ const UserManagement = () => {
               <DialogFooter>
                 <Button
                   onClick={handleCreateUser}
-                  disabled={createUserMutation.isPending || !formData.email || !formData.firstName}
+                  disabled={createUserMutation.isPending || !formData.email || !formData.password || !formData.firstName}
                 >
                   {createUserMutation.isPending ? 'Creating...' : 'Create User'}
                 </Button>
