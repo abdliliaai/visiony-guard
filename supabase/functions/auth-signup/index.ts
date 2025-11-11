@@ -12,6 +12,9 @@ interface SignupRequest {
   inviteToken?: string;
   firstName?: string;
   lastName?: string;
+  tenantId?: string;
+  orgId?: string;
+  role?: string;
 }
 
 serve(async (req) => {
@@ -25,12 +28,12 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { email, password, inviteToken, firstName, lastName }: SignupRequest = await req.json();
+    const { email, password, inviteToken, firstName, lastName, tenantId: providedTenantId, orgId: providedOrgId, role: providedRole }: SignupRequest = await req.json();
 
     // Check if invite token exists and is valid
-    let orgId: string | null = null;
-    let tenantId: string | null = null;
-    let role: string = 'viewer';
+    let orgId: string | null = providedOrgId || null;
+    let tenantId: string | null = providedTenantId || null;
+    let role: string = providedRole || 'viewer';
 
     if (inviteToken) {
       const { data: invite, error: inviteError } = await supabase
@@ -51,8 +54,8 @@ serve(async (req) => {
       orgId = invite.org_id;
       tenantId = invite.tenant_id;
       role = invite.role;
-    } else {
-      // Create default org and tenant for new signups
+    } else if (!orgId || !tenantId) {
+      // Create default org and tenant only if not provided (self-signup)
       const { data: org, error: orgError } = await supabase
         .from('vy_org')
         .insert({ name: `${firstName || email.split('@')[0]}'s Organization` })
@@ -79,7 +82,7 @@ serve(async (req) => {
 
       orgId = org.id;
       tenantId = tenant.id;
-      role = 'tenant_admin';
+      role = role || 'tenant_admin';
     }
 
     // Create user account
