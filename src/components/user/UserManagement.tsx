@@ -101,8 +101,14 @@ const UserManagement = () => {
       setIsDialogOpen(false);
       setFormData({ email: '', firstName: '', lastName: '', role: 'viewer', tenantId: '' });
     },
-    onError: (error) => {
-      toast.error(`Failed to create user: ${error.message}`);
+    onError: (error: any) => {
+      const errorMessage = error.message || 'Failed to create user';
+      
+      if (errorMessage.includes('already been registered')) {
+        toast.error('This email is already registered. Please use a different email address or delete the existing user first from Supabase Auth.');
+      } else {
+        toast.error(`Failed to create user: ${errorMessage}`);
+      }
     },
   });
 
