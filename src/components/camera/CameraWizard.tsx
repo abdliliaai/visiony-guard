@@ -76,7 +76,7 @@ const WIZARD_STEPS = [
 ];
 
 export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantId }: CameraWizardProps) => {
-  const { addDevice } = useDevices();
+  const { addDevice, updateDevice } = useDevices();
   const { toast } = useToast();
   
   const [currentStep, setCurrentStep] = useState(0);
@@ -175,7 +175,7 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
   const finishSetup = async () => {
     setLoading(true);
     try {
-      const { error } = await addDevice({
+      const deviceData = {
         name: deviceForm.name,
         description: deviceForm.description,
         rtsp_url: deviceForm.protocol === 'rtsp' ? deviceForm.rtsp_url : undefined,
@@ -194,14 +194,18 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
             return acc;
           }, {} as Record<string, any>),
         },
-      });
+      };
+
+      const { error } = editingCamera
+        ? await updateDevice(editingCamera.id, deviceData)
+        : await addDevice(deviceData);
 
       if (error) {
         throw new Error(error);
       }
 
       toast({
-        title: "Camera Added Successfully",
+        title: editingCamera ? "Camera Updated Successfully" : "Camera Added Successfully",
         description: `${deviceForm.name} has been configured and will start monitoring shortly.`,
       });
 
@@ -211,7 +215,7 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
     } catch (error: any) {
       toast({
         title: "Setup Failed",
-        description: error.message || "Failed to add camera. Please try again.",
+        description: error.message || `Failed to ${editingCamera ? 'update' : 'add'} camera. Please try again.`,
         variant: "destructive",
       });
     } finally {
