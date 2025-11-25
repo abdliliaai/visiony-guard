@@ -11,6 +11,8 @@ import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { useDevices } from '@/hooks/useDevices';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useTenant } from '@/contexts/TenantContext';
 import { 
   Camera, 
   TestTube, 
@@ -63,6 +65,9 @@ interface DetectionThreshold {
   enabled: boolean;
 }
 
+const formatPointsForSvg = (points: ROIPoint[]) =>
+  points.map(point => `${point.x * 100},${point.y * 100}`).join(' ');
+
 const DETECTION_CLASSES = [
   'person', 'car', 'truck', 'motorcycle', 'bicycle', 'animal', 'package'
 ];
@@ -78,6 +83,7 @@ const WIZARD_STEPS = [
 export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantId }: CameraWizardProps) => {
   const { addDevice, updateDevice } = useDevices();
   const { toast } = useToast();
+  const { currentTenantId } = useTenant();
   
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -134,26 +140,81 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
   const testConnection = async () => {
     setLoading(true);
     try {
-      // Simulate connection test - in real implementation, this would call an edge function
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const streamUrl = deviceForm.protocol === 'rtsp' ? deviceForm.rtsp_url : deviceForm.webrtc_url;
       
-      // Mock success with preview image
-      setConnectionValid(true);
-      setConnectionTested(true);
-      setPreviewImage('/placeholder.svg'); // In real app, this would be a frame from the stream
+      if (!streamUrl?.trim()) {
+        throw new Error('Please enter a stream URL');
+      }
+
+      // Get fresh session token before making the request
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      toast({
-        title: "Connection Successful",
-        description: "Camera stream is accessible and working properly.",
+      if (sessionError) {
+        console.error('Session refresh error:', sessionError);
+        throw new Error('Authentication error. Please try logging out and back in.');
+      }
+      
+      if (!session?.access_token) {
+        throw new Error('No valid session. Please log in again.');
+      }
+
+      // Test connection via streams service directly
+      const streamsUrl = import.meta.env.VITE_STREAMS_SERVICE_URL || 'https://visiony.xylox.ai/streams';
+      const response = await fetch(`${streamsUrl}/api/test-camera`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          url: streamUrl.trim(),
+          protocol: deviceForm.protocol,
+          timeout: 50000 // 30 second timeout for unstable connections
+        }),
       });
+
+      const result = await response.json();
+      console.log('Camera test result:', { 
+        success: result.success, 
+        hasPreviewFrame: !!result.previewFrame,
+        previewFrameLength: result.previewFrame?.length || 0
+      });
+
+      if (response.ok && result.success) {
+        setConnectionValid(true);
+        setConnectionTested(true);
+        
+        // Set preview image if available from test
+        if (result.previewFrame) {
+          const imageDataUrl = `data:image/jpeg;base64,${result.previewFrame}`;
+          console.log('Setting preview image, data URL length:', imageDataUrl.length);
+          setPreviewImage(imageDataUrl);
+        } else {
+          console.log('No preview frame in response, using placeholder');
+          setPreviewImage('/placeholder.svg');
+        }
+        
+        toast({
+          title: "Connection Successful ✅",
+          description: `Camera stream is accessible. Resolution: ${result.width || 'Unknown'}x${result.height || 'Unknown'}`,
+        });
+      } else {
+        throw new Error(result.error || 'Connection test failed');
+      }
     } catch (error) {
       setConnectionValid(false);
       setConnectionTested(true);
+      setPreviewImage(null);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      
       toast({
-        title: "Connection Failed",
-        description: "Unable to connect to camera stream. Please check your URL and credentials.",
+        title: "Connection Failed ❌",
+        description: `Unable to connect: ${errorMessage}`,
         variant: "destructive",
       });
+      
+      console.error('Camera connection test failed:', error);
     } finally {
       setLoading(false);
     }
@@ -174,13 +235,41 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
 
   const finishSetup = async () => {
     setLoading(true);
+        
     try {
+      // Refresh session before setup
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session refresh error:', sessionError);
+        throw new Error('Authentication error. Please try logging out and back in.');
+      }
+      
+      if (!session?.access_token) {
+        throw new Error('No valid session. Please log in again.');
+      }
+
+      // Validate required fields
+      if (!deviceForm.name?.trim()) {
+        throw new Error('Camera name is required');
+      }
+      
+      const effectiveTenantId = currentTenantId || tenantId;
+      if (!effectiveTenantId) {
+        throw new Error('No tenant selected - please ensure you have selected a tenant');
+      }
+      
+      if (deviceForm.protocol === 'rtsp' && !deviceForm.rtsp_url?.trim()) {
+        throw new Error('RTSP URL is required for RTSP protocol');
+      }
+
       const deviceData = {
-        name: deviceForm.name,
-        description: deviceForm.description,
-        rtsp_url: deviceForm.protocol === 'rtsp' ? deviceForm.rtsp_url : undefined,
-        webrtc_url: deviceForm.protocol === 'webrtc' ? deviceForm.webrtc_url : undefined,
-        location: deviceForm.location,
+        name: deviceForm.name.trim(),
+        description: deviceForm.description?.trim() || '',
+        rtsp_url: deviceForm.protocol === 'rtsp' ? deviceForm.rtsp_url?.trim() : undefined,
+        webrtc_url: deviceForm.protocol === 'webrtc' ? deviceForm.webrtc_url?.trim() : undefined,
+        location: deviceForm.location?.trim() || '',
+        tenant_id: effectiveTenantId,
         roi_polygons: roiPoints as any,
         enabled: true,
         online: false,
@@ -196,13 +285,21 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
         },
       };
 
-      const { error } = editingCamera
+      console.log('📤 Final device data to send:', JSON.stringify(deviceData, null, 2));
+
+      console.log(`🚀 ${editingCamera ? 'Updating' : 'Adding'} device...`);
+      const result = editingCamera
         ? await updateDevice(editingCamera.id, deviceData)
         : await addDevice(deviceData);
+      
+      console.log('📥 Device operation result:', result);
 
-      if (error) {
-        throw new Error(error);
+      if (result && result.error) {
+        console.error('❌ Device operation returned error:', result.error);
+        throw new Error(result.error);
       }
+
+      console.log(`✅ Camera ${editingCamera ? 'updated' : 'added'} successfully!`);
 
       toast({
         title: editingCamera ? "Camera Updated Successfully" : "Camera Added Successfully",
@@ -213,9 +310,11 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
       onComplete();
       onClose();
     } catch (error: any) {
+      console.error('❌ Setup failed with error:', error);
+      
       toast({
         title: "Setup Failed",
-        description: error.message || `Failed to ${editingCamera ? 'update' : 'add'} camera. Please try again.`,
+        description: error.message || `Failed to ${editingCamera ? 'update' : 'add'} camera. Please check the console for details.`,
         variant: "destructive",
       });
     } finally {
@@ -306,7 +405,7 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
                 id="stream_url"
                 placeholder={
                   deviceForm.protocol === 'rtsp' 
-                    ? "rtsp://admin:password@192.168.1.100:554/stream1"
+                    ? "rtsp://admin:Welcome100!@192.168.50.14:554/Streaming/Channels/101"
                     : "https://camera.example.com/webrtc"
                 }
                 value={deviceForm.protocol === 'rtsp' ? deviceForm.rtsp_url : deviceForm.webrtc_url}
@@ -374,11 +473,21 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
             {previewImage && (
               <div className="space-y-2">
                 <Label>Live Preview</Label>
+                {(() => {
+                  console.log('Render preview - previewImage state:', {
+                    hasPreviewImage: !!previewImage,
+                    previewImageLength: previewImage?.length || 0,
+                    previewImageStart: previewImage?.substring(0, 50) || 'none'
+                  });
+                  return null;
+                })()}
                 <div className="aspect-video bg-muted rounded-lg overflow-hidden">
                   <img 
                     src={previewImage} 
                     alt="Camera preview" 
                     className="w-full h-full object-cover"
+                    onLoad={() => console.log('Preview image loaded successfully')}
+                    onError={(e) => console.error('Preview image failed to load:', e)}
                   />
                 </div>
               </div>
@@ -386,7 +495,10 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
           </div>
         );
 
-      case 2: // ROI
+      case 2: { // ROI
+        const roiPointPath = formatPointsForSvg(roiPoints);
+        const firstPoint = roiPoints[0];
+        const lastPoint = roiPoints[roiPoints.length - 1];
         return (
           <div className="space-y-4">
             <div>
@@ -416,16 +528,50 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
                     backgroundPosition: 'center',
                   }}
                 />
-                {roiPoints.map((point, index) => (
-                  <div
-                    key={index}
-                    className="absolute w-2 h-2 bg-primary rounded-full transform -translate-x-1/2 -translate-y-1/2"
-                    style={{
-                      left: `${point.x * 100}%`,
-                      top: `${point.y * 100}%`,
-                    }}
-                  />
-                ))}
+                <svg
+                  viewBox="0 0 100 100"
+                  className="absolute inset-0 w-full h-full pointer-events-none"
+                  preserveAspectRatio="none"
+                >
+                  {roiPoints.length >= 3 && roiPointPath && (
+                    <polygon
+                      points={roiPointPath}
+                      fill="rgba(34,197,94,0.15)"
+                    />
+                  )}
+                  {roiPoints.length >= 2 && roiPointPath && (
+                    <polyline
+                      points={roiPointPath}
+                      fill="none"
+                      stroke="#22c55e"
+                      strokeWidth={1.5}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  )}
+                  {roiPoints.length >= 3 && firstPoint && lastPoint && (
+                    <line
+                      x1={lastPoint.x * 100}
+                      y1={lastPoint.y * 100}
+                      x2={firstPoint.x * 100}
+                      y2={firstPoint.y * 100}
+                      stroke="#22c55e"
+                      strokeWidth={1.5}
+                      vectorEffect="non-scaling-stroke"
+                      strokeDasharray="4 4"
+                    />
+                  )}
+                  {roiPoints.map((point, index) => (
+                    <circle
+                      key={`${point.x}-${point.y}-${index}`}
+                      cx={point.x * 100}
+                      cy={point.y * 100}
+                      r={1.5}
+                      fill="#22c55e"
+                      stroke="#14532d"
+                      strokeWidth={0.5}
+                    />
+                  ))}
+                </svg>
               </div>
               <p className="text-sm text-muted-foreground">
                 {roiPoints.length === 0 
@@ -436,6 +582,7 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
             </div>
           </div>
         );
+      }
 
       case 3: // Thresholds
         return (
@@ -515,9 +662,9 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Camera</DialogTitle>
+          <DialogTitle>{editingCamera ? 'Edit Camera' : 'Add New Camera'}</DialogTitle>
           <DialogDescription>
-            Configure a new camera for AI-powered security monitoring
+            {editingCamera ? 'Update camera configuration' : 'Configure a new camera for AI-powered security monitoring'}
           </DialogDescription>
         </DialogHeader>
 
@@ -578,10 +725,10 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Setting up...
+                    {editingCamera ? 'Updating...' : 'Setting up...'}
                   </>
                 ) : (
-                  'Complete Setup'
+                  editingCamera ? 'Update Camera' : 'Complete Setup'
                 )}
               </Button>
             ) : (
