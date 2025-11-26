@@ -263,13 +263,12 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
         throw new Error('RTSP URL is required for RTSP protocol');
       }
 
-      const deviceData = {
+      const baseDeviceData = {
         name: deviceForm.name.trim(),
         description: deviceForm.description?.trim() || '',
         rtsp_url: deviceForm.protocol === 'rtsp' ? deviceForm.rtsp_url?.trim() : undefined,
         webrtc_url: deviceForm.protocol === 'webrtc' ? deviceForm.webrtc_url?.trim() : undefined,
         location: deviceForm.location?.trim() || '',
-        tenant_id: effectiveTenantId,
         roi_polygons: roiPoints as any,
         enabled: true,
         online: false,
@@ -284,6 +283,11 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
           }, {} as Record<string, any>),
         },
       };
+
+      // Only include tenant_id when adding a new device
+      const deviceData = editingCamera 
+        ? baseDeviceData 
+        : { ...baseDeviceData, tenant_id: effectiveTenantId };
 
       console.log('📤 Final device data to send:', JSON.stringify(deviceData, null, 2));
 
