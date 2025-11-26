@@ -345,10 +345,8 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
         description: `${deviceForm.name} has been configured and will start monitoring shortly.`,
       });
 
-      // Wait for the parent component to refresh before closing
-      await onComplete();
-      
       resetWizard();
+      onComplete();
       onClose();
     } catch (error: any) {
       console.error('❌ Setup failed with error:', error);

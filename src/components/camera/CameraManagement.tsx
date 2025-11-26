@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Header } from '@/components/Header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useDevices } from '@/hooks/useDevices';
 import { ColumnDef } from '@tanstack/react-table';
 
 interface CameraDevice {
@@ -47,8 +48,7 @@ interface CameraManagementProps {
 const CameraManagement: React.FC<CameraManagementProps> = ({ tenantId }) => {
   const { profile, isAdmin } = useAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [cameras, setCameras] = useState<CameraDevice[]>([]);
+  const { devices: cameras, loading, deleteDevice } = useDevices();
   const [showCameraWizard, setShowCameraWizard] = useState(false);
   const [editingCamera, setEditingCamera] = useState<CameraDevice | null>(null);
 
@@ -168,41 +168,6 @@ const CameraManagement: React.FC<CameraManagementProps> = ({ tenantId }) => {
     },
   ];
 
-  useEffect(() => {
-    fetchCameras();
-  }, [tenantId]);
-
-  const fetchCameras = async () => {
-    try {
-      setLoading(true);
-      
-      const query = supabase
-        .from('vy_device')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (tenantId) {
-        query.eq('tenant_id', tenantId);
-      } else if (profile?.tenant_id) {
-        query.eq('tenant_id', profile.tenant_id);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      setCameras(data || []);
-    } catch (error: any) {
-      console.error('Error fetching cameras:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load cameras.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleTestConnection = async (camera: CameraDevice) => {
     try {
@@ -277,19 +242,14 @@ const CameraManagement: React.FC<CameraManagementProps> = ({ tenantId }) => {
     }
 
     try {
-      const { error } = await supabase
-        .from('vy_device')
-        .delete()
-        .eq('id', camera.id);
+      const result = await deleteDevice(camera.id);
 
-      if (error) throw error;
+      if (result.error) throw new Error(result.error);
 
       toast({
         title: "Camera Deleted",
         description: `${camera.name} has been deleted.`,
       });
-
-      fetchCameras();
     } catch (error: any) {
       toast({
         title: "Delete Failed",
@@ -299,10 +259,8 @@ const CameraManagement: React.FC<CameraManagementProps> = ({ tenantId }) => {
     }
   };
 
-  const handleWizardComplete = async () => {
-    console.log('🔄 Wizard completed, refreshing camera list...');
-    await fetchCameras();
-    console.log('✅ Camera list refreshed');
+  const handleWizardComplete = () => {
+    console.log('✅ Wizard completed, devices will auto-update via realtime subscription');
     setShowCameraWizard(false);
     setEditingCamera(null);
   };
