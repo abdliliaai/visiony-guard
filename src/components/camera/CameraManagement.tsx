@@ -299,10 +299,12 @@ const CameraManagement: React.FC<CameraManagementProps> = ({ tenantId }) => {
     }
   };
 
-  const handleWizardComplete = () => {
+  const handleWizardComplete = async () => {
+    console.log('🔄 Wizard completed, refreshing camera list...');
+    await fetchCameras();
+    console.log('✅ Camera list refreshed');
     setShowCameraWizard(false);
     setEditingCamera(null);
-    fetchCameras();
   };
 
   if (!isAdmin) {
