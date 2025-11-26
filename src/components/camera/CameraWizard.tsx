@@ -81,7 +81,7 @@ const WIZARD_STEPS = [
 ];
 
 export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantId }: CameraWizardProps) => {
-  const { addDevice, updateDevice } = useDevices();
+  const { devices, addDevice, updateDevice } = useDevices();
   const { toast } = useToast();
   const { currentTenantId } = useTenant();
   
@@ -90,6 +90,7 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
   const [connectionTested, setConnectionTested] = useState(false);
   const [connectionValid, setConnectionValid] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
   
   const [deviceForm, setDeviceForm] = useState<DeviceForm>({
     name: editingCamera?.name || '',
@@ -115,6 +116,7 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
     setConnectionValid(false);
     setPreviewImage(null);
     setRoiPoints([]);
+    setNameError(null);
     setDeviceForm({
       name: '',
       description: '',
@@ -233,6 +235,27 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
     setRoiPoints([]);
   };
 
+  const validateCameraName = (name: string) => {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setNameError(null);
+      return;
+    }
+
+    const effectiveTenantId = currentTenantId || tenantId;
+    const duplicateCamera = devices.find(device => 
+      device.name.toLowerCase() === trimmedName.toLowerCase() &&
+      device.tenant_id === effectiveTenantId &&
+      device.id !== editingCamera?.id
+    );
+
+    if (duplicateCamera) {
+      setNameError(`A camera named "${trimmedName}" already exists`);
+    } else {
+      setNameError(null);
+    }
+  };
+
   const finishSetup = async () => {
     setLoading(true);
         
@@ -261,6 +284,18 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
       
       if (deviceForm.protocol === 'rtsp' && !deviceForm.rtsp_url?.trim()) {
         throw new Error('RTSP URL is required for RTSP protocol');
+      }
+
+      // Check for duplicate camera names in the same tenant
+      const trimmedName = deviceForm.name.trim();
+      const duplicateCamera = devices.find(device => 
+        device.name.toLowerCase() === trimmedName.toLowerCase() &&
+        device.tenant_id === effectiveTenantId &&
+        device.id !== editingCamera?.id // Exclude current camera when editing
+      );
+
+      if (duplicateCamera) {
+        throw new Error(`A camera named "${trimmedName}" already exists in this tenant. Please choose a different name.`);
       }
 
       const baseDeviceData = {
@@ -335,7 +370,7 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
   const canProceed = () => {
     switch (currentStep) {
       case 0: // Device Info
-        return deviceForm.name && (deviceForm.rtsp_url || deviceForm.webrtc_url);
+        return deviceForm.name && (deviceForm.rtsp_url || deviceForm.webrtc_url) && !nameError;
       case 1: // Connection Test
         return connectionTested && connectionValid;
       case 2: // ROI (optional)
@@ -359,8 +394,16 @@ export const CameraWizard = ({ open, onClose, onComplete, editingCamera, tenantI
                   id="name"
                   placeholder="Main Entrance Camera"
                   value={deviceForm.name}
-                  onChange={(e) => setDeviceForm(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    setDeviceForm(prev => ({ ...prev, name: newName }));
+                    validateCameraName(newName);
+                  }}
+                  className={nameError ? "border-destructive" : ""}
                 />
+                {nameError && (
+                  <p className="text-sm text-destructive">{nameError}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>
