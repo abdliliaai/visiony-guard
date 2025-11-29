@@ -6,7 +6,77 @@
 
 @layer base {
   :root {
-    /* Core Brand Colors */
+    /* Light Mode Colors */
+    --primary: 220 100% 50%;
+    --primary-hover: 220 100% 45%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Background & Surfaces */
+    --background: 0 0% 100%;
+    --surface: 0 0% 98%;
+    --surface-hover: 0 0% 96%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 10% 10%;
+    
+    /* Text */
+    --foreground: 220 10% 10%;
+    --muted-foreground: 220 10% 40%;
+    --text-secondary: 220 10% 30%;
+    
+    /* Status Colors */
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+    --destructive: 0 84% 60%;
+    --info: 200 100% 60%;
+    
+    /* Detection States */
+    --detection-active: 142 71% 45%;
+    --detection-warning: 38 92% 50%;
+    --detection-critical: 0 84% 60%;
+    
+    /* Interactive */
+    --accent: 220 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --secondary: 220 10% 95%;
+    --secondary-foreground: 220 10% 10%;
+    --muted: 220 10% 96%;
+    
+    /* Borders & Inputs */
+    --border: 220 10% 90%;
+    --input: 220 10% 96%;
+    --ring: 220 100% 50%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(220 100% 50%), hsl(240 100% 60%));
+    --gradient-detection: linear-gradient(90deg, hsl(142 71% 45%) 0%, hsl(200 100% 60%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 98%) 0%, hsl(0 0% 100%) 100%);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(220 10% 10% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(220 10% 10% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(220 10% 10% / 0.1);
+    --shadow-glow: 0 0 20px hsl(220 100% 50% / 0.2);
+    
+    /* Animation */
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  
+  .dark {
+    /* Dark Mode Colors */
     --primary: 220 100% 50%;
     --primary-hover: 220 100% 45%;
     --primary-foreground: 0 0% 100%;
@@ -17,6 +87,8 @@
     --surface-hover: 220 10% 16%;
     --card: 220 10% 10%;
     --card-foreground: 0 0% 95%;
+    --popover: 220 10% 12%;
+    --popover-foreground: 0 0% 95%;
     
     /* Text */
     --foreground: 0 0% 95%;
@@ -57,27 +129,14 @@
     --shadow-lg: 0 10px 15px -3px hsl(220 10% 4% / 0.5);
     --shadow-glow: 0 0 20px hsl(220 100% 50% / 0.3);
     
-    /* Animation */
-    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    
-    --radius: 0.75rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 220 10% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 220 10% 10%;
+    --sidebar-accent: 220 10% 15%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 220 10% 20%;
+    --sidebar-ring: 220 100% 50%;
   }
 }
 
@@ -121,27 +180,4 @@
       box-shadow: 0 0 0 8px hsl(var(--detection-active) / 0);
     }
   }
-}
-
-/* Dark mode overrides (Vision-Y uses dark theme by default) */
-.dark {
-    --background: 220 10% 8%;
-    --foreground: 0 0% 95%;
-    --card: 220 10% 10%;
-    --card-foreground: 0 0% 95%;
-    --popover: 220 10% 12%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 220 100% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 10% 20%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 220 10% 15%;
-    --muted-foreground: 0 0% 65%;
-    --accent: 220 100% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 10% 20%;
-    --input: 220 10% 15%;
-    --ring: 220 100% 50%;
 }
